@@ -1,0 +1,15 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+
+  docker:
+    compose:
+      enabled: true
+      file: /workspaces/codespaces-blank/stomp/docker-compose-local.yml    
+      lifecycle-management: start-and-stop
+
+  flyway:
+    baseline-on-migrate: true
+    fail-on-missing-locations: true
+    locations: classpath:db/

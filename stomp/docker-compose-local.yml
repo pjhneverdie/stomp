@@ -1,0 +1,13 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: stomp-local-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: localdb
+      MYSQL_USER: localuser
+      MYSQL_PASSWORD: localpass
+      MYSQL_ROOT_PASSWORD: rootpass
+    command:
+      - --character-set-server=utf8mb4
