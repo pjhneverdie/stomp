@@ -6,11 +6,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Getter
 public enum CourtStatus {
-    STEP_STAND_BY(""), // 이해관계자들이 다 재판에 입장할 때까지 기다리는 상태
-    STEP_APPEALING(""), // LLM에게 각자 입장에서 상황을 설명 중인 상태
-    STEP_ARGUING(""), // 서로 잘잘못 따지고 있는 상태
-    STEP_STOPPED(""), // 탈주로 재판이 멈춘 상태
-    STEP_JUDJED(""); // 재판이 끝난 상태
+    STEP_STAND_BY(""), // step which waits for both user's entrance.
+    STEP_APPEALING(""), // step which explains the situation in each point of view to LLM.
+    STEP_ARGUING(""), // step which argues right and wrong based on each appealing.
+    STEP_JUDJED(""); // step where LLM makes the final decision.
 
-    private final String status;
+    private final String value;
 }

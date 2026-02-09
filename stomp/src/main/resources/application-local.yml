@@ -13,3 +13,24 @@ spring:
     baseline-on-migrate: true
     fail-on-missing-locations: true
     locations: classpath:db/
+    
+  datasource:
+    url: jdbc:mysql://localhost:3306/localdb?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: localuser
+    password: localpass
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: localuser
+    password: localpass
+    stomp:
+      port: 61613
+
+

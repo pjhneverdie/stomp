@@ -1,11 +1,24 @@
 services:
+  rabbitmq:
+    container_name: local-rabbitmq
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+      - "61613:61613"
+    environment:
+      RABBITMQ_DEFAULT_USER: localuser
+      RABBITMQ_DEFAULT_PASS: localpass
+    command: >
+      sh -c "rabbitmq-plugins enable --offline rabbitmq_stomp && rabbitmq-server"
   redis:
+    container_name: local-redis
     image: redis:7.4-alpine
     ports:
       - "6379:6379"
   mysql:
     image: mysql:8.0
-    container_name: stomp-local-mysql
+    container_name: local-mysql
     ports:
       - "3306:3306"
     environment:
