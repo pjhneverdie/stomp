@@ -4,8 +4,11 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
+import com.redis.om.spring.annotations.EnableRedisDocumentRepositories;
+
 @SpringBootApplication
 @ConfigurationPropertiesScan
+@EnableRedisDocumentRepositories(basePackages = "com.example.stomp.*")
 public class StompApplication {
 
 	public static void main(String[] args) {
