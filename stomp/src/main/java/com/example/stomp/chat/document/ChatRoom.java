@@ -8,6 +8,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 @Document
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -18,6 +19,7 @@ public class ChatRoom {
     @Id
     private String id;
 
+    @NonNull
     private String name;
 
     public static ChatRoom create(String id, String name) {

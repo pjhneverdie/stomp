@@ -8,11 +8,10 @@ import lombok.RequiredArgsConstructor;
 public class ChatPresenceRepository {
     private final StringRedisTemplate redisTemplate;
 
-    public void join(String roomId, String userId) {
-        redisTemplate.opsForSet().add("chat:participants:" + roomId, userId);
+    public void join(String roomId, String memberId) {
+        redisTemplate.opsForSet().add("chat:participants:" + roomId, memberId);
     }
 
     // get 만들고
-    
 
 }

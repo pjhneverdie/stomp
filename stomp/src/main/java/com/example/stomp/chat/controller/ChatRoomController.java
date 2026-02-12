@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
-@RequestMapping("")
+@RequestMapping("/chat")
 @RequiredArgsConstructor
 public class ChatRoomController {
 
@@ -29,7 +29,7 @@ public class ChatRoomController {
 
         chatRoomRepository.save(chatRoom);
 
-        return ";";
+        return roomId;
     }
 
 }
