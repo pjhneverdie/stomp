@@ -1,8 +1,7 @@
 package com.example.stomp.chat.document;
 
 import org.springframework.data.annotation.Id;
-
-import com.redis.om.spring.annotations.Document;
+import org.springframework.data.redis.core.RedisHash;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -10,7 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
-@Document
+@RedisHash(value = "chatRoom")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
