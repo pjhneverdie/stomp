@@ -15,8 +15,6 @@ public class StompApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(StompApplication.class, args);
 
-// OAuth2ClientProperties 
-		new OAuth2ClientPropertiesMapper()
 	}
 
 	
