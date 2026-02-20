@@ -19,6 +19,8 @@ repositories {
 }
 
 dependencies {
+	implementation("com.github.javafaker:javafaker:1.0.2")
+	
 	implementation 'io.github.cdimascio:dotenv-java:3.2.0'
 	
 	implementation("org.springframework.boot:spring-boot-docker-compose:3.5.10")
