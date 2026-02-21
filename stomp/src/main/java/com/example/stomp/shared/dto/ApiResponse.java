@@ -40,8 +40,4 @@ public interface ApiResponse<T> {
         return new Failure(null, e.getClass().getSimpleName(), e.getMessage(), e.getHttpStatus());
     }
 
-    static Failure createDefaultFailureResponse(String exceptionName, String message, HttpStatus status) {
-        return new Failure(null, exceptionName, message, status);
-    }
-
 }

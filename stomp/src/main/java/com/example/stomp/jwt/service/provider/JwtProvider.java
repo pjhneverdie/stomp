@@ -26,9 +26,9 @@ public class JwtProvider {
                 .getBody();
     }
 
-    public String createToken(String subject, Map<String, Object> claims, Date issuedAt, Date expiration) {
+    public String createToken(long id, Map<String, Object> claims, Date issuedAt, Date expiration) {
         return Jwts.builder()
-                .setSubject(subject)
+                .setSubject(String.valueOf(id))
                 .addClaims(claims)
                 .setIssuedAt(issuedAt)
                 .setExpiration(expiration)

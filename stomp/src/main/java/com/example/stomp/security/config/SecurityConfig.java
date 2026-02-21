@@ -12,6 +12,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import com.example.stomp.member.service.SimpleOidcUserService;
 import com.example.stomp.security.entrypoint.UnauthenticatedEntryPoint;
 import com.example.stomp.security.handler.OicdLoginSuccessHandler;
+import com.example.stomp.security.handler.SecurityExceptionHandler;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,7 +23,7 @@ public class SecurityConfig {
 
     private final SimpleOidcUserService simpleOidcUserService;
     private final OicdLoginSuccessHandler oicdLoginSuccessHandler;
-    private final UnauthenticatedEntryPoint unauthenticatedEntryPoint;
+    private final SecurityExceptionHandler securityExceptionHandler;
 
     @Bean
     @Profile({ "local", "test" })
@@ -44,8 +45,12 @@ public class SecurityConfig {
 
         http.oauth2Login((config) -> config
                 .userInfoEndpoint((endpoint) -> endpoint.oidcUserService(simpleOidcUserService))
-                .successHandler(oicdLoginSuccessHandler))
-                .exceptionHandling((config) -> config.authenticationEntryPoint(unauthenticatedEntryPoint));
+                .successHandler(oicdLoginSuccessHandler)
+                .failureHandler(securityExceptionHandler))
+                .exceptionHandling(
+                        (config) -> config
+                                .authenticationEntryPoint(securityExceptionHandler)
+                                .accessDeniedHandler(securityExceptionHandler));
 
         http.authorizeHttpRequests((authorize) -> authorize
                 .requestMatchers("/", "/css/**", "/images/**", "/js/**", "/favicon.ico")
@@ -54,4 +59,6 @@ public class SecurityConfig {
 
         return http.build();
     }
+
+    
 }

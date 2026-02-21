@@ -1,4 +1,4 @@
-package com.example.stomp.security.util;
+package com.example.stomp.shared.util;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
-public abstract class SecurityUtils {
+public abstract class SecurityUtil {
 
     private static final String AUTHORITY_DELIMITER = ",";
 
@@ -19,7 +19,6 @@ public abstract class SecurityUtils {
     }
 
     public static List<GrantedAuthority> stringToAuthorities(String authoritiesString) {
-
         return Arrays.stream(authoritiesString.split(AUTHORITY_DELIMITER))
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());

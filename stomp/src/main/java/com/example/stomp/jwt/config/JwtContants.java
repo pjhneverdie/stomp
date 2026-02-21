@@ -5,9 +5,8 @@ public abstract class JwtContants {
     public static final String ROLES_KEY = "roles";
     public static final String TYPE_DISCRIMINATOR_KEY = "token_type";
 
-    public static final String REFRESH_TOKEN_PREFIX = "rt";
-    public static final String BLACKLIST_PREFIX = "black_";
-    public static final String BLACKLIST_REASON = "logout";
+    public static final String REFRESH_TOKEN_PREFIX = "rt:";
+    public static final String BLACKLIST_PREFIX = "black:";
 
     public static enum TokenType {
         ACCESS,
@@ -15,7 +14,8 @@ public abstract class JwtContants {
     }
 
     public static enum BlackReason {
-        LOGOUT;
+        LOGOUT,
+        REISSUE
     }
 
     private JwtContants() {

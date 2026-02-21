@@ -1,19 +1,18 @@
 package com.example.stomp.member.service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Component;
 
 import com.example.stomp.member.domain.Member;
+import com.example.stomp.member.dto.OidcMemberDetails;
 import com.example.stomp.member.repository.MemberRepository;
+import com.example.stomp.shared.util.SecurityUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -31,10 +30,8 @@ public class SimpleOidcUserService extends OidcUserService {
                 .orElseGet(
                         () -> memberRepository.save(Member.createMember(oidcUser.getEmail(), oidcUser.getPicture())));
 
-        List<GrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority(member.getMemberRole().toString()));
-
-        return new DefaultOidcUser(authorities, oidcUser.getIdToken(), oidcUser.getUserInfo());
+        List<GrantedAuthority> authorities = SecurityUtil.stringToAuthorities(member.getMemberRole().toString());
+        return new OidcMemberDetails(member.getId(), authorities, oidcUser.getIdToken(), oidcUser.getUserInfo());
     }
 
 }
