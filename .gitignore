@@ -1,2 +1,2 @@
 /.vscode
-/stomp/local.env
+**/local.env

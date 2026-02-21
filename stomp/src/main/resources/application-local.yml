@@ -3,12 +3,12 @@ spring:
     activate:
       on-profile: local
     import:
-      - "optional:classpath:/local/application-security.yml"
+      - "optional:classpath:/application-local-security.yml"
 
   docker:
     compose:
       enabled: true
-      file: /workspaces/codespaces-blank/stomp/docker-compose-local.yml    
+      file: /workspaces/codespaces-blank/stomp/docker-compose-local.yml
       lifecycle-management: start-and-stop
 
   flyway:
@@ -35,4 +35,8 @@ spring:
     stomp:
       port: 61613
 
+jwt:
+  secret: v9yBEHMcQfTjWnZr4u7xACFJaNdRgUkXp2s5v8yBEGKbPeShVmYq3tv9yBEHMcQfTjdsakjdsajqqhfhfehfhdsd
+  access-token-validity: 3600000        # (60 * 60 * 1000)
+  refresh-token-validity: 86400000 # (60 * 60 * 24 * 1000)
 

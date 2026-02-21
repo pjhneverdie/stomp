@@ -3,23 +3,3 @@ spring:
     name: stomp
   profiles:
     active: local
-  security:
-    oauth2:
-      client:
-        # 카카오는 CommonOAuth2Provider 미지원이라 직접 registration, provider 넣어야 해.
-        # 어떤 값이 필수인지 구글링하면 나오는데 불안하면 코드 까보셈.
-        # 시큐리티가 @ConfigurationProperties로 여기 읽어서 OAuth2ClientProperties를 만들어, 그리고 OAuth2ClientPropertiesMapper가 OAuth2ClientProperties를 써서 ClientRegistration을 만드는 구조야. 
-        registration:
-          kakao:
-            scope:
-              - profile_nickname
-              - account_email
-            authorization-grant-type: authorization_code
-            client-authentication-method: client_secret_post
-
-        provider:
-          kakao:
-            authorization-uri: https://kauth.kakao.com/oauth/authorize
-            token-uri: https://kauth.kakao.com/oauth/token
-            user-info-uri: https://kapi.kakao.com/v2/user/me
-            user-name-attribute: id

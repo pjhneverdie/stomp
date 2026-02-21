@@ -1,4 +1,4 @@
-package com.example.stomp.redis.config;
+package com.example.stomp.shared.redis.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
