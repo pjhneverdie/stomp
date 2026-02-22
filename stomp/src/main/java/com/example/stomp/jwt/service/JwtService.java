@@ -11,7 +11,7 @@ import com.example.stomp.jwt.config.JwtContants;
 import com.example.stomp.jwt.config.JwtProperties;
 import com.example.stomp.jwt.dto.CreateAccessTokenDto;
 import com.example.stomp.jwt.dto.CreateRefreshTokenDto;
-import com.example.stomp.jwt.dto.CreateRefreshTokenResponse;
+import com.example.stomp.jwt.dto.RefreshTokenDto;
 import com.example.stomp.jwt.dto.exception.BlacklistedTokenException;
 import com.example.stomp.jwt.dto.exception.ExpiredTokenException;
 import com.example.stomp.jwt.dto.exception.InvalidTokenException;
@@ -48,7 +48,7 @@ public class JwtService {
                 Date.from(expiry));
     }
 
-    public CreateRefreshTokenResponse createAndSaveRefreshToken(CreateRefreshTokenDto cTokenDto) {
+    public RefreshTokenDto createAndSaveRefreshToken(CreateRefreshTokenDto cTokenDto) {
         Map<String, Object> claims = new HashMap<>();
 
         claims.put(JwtContants.TYPE_DISCRIMINATOR_KEY,
@@ -66,15 +66,15 @@ public class JwtService {
                 refreshToken,
                 jwtProperties.refreshTokenValidity());
 
-        return new CreateRefreshTokenResponse(refreshToken, jwtProperties.refreshTokenValidity() / 1000);
+        return new RefreshTokenDto(refreshToken, jwtProperties.refreshTokenValidity() / 1000);
     }
 
     public void blackAccessToken(String accessToken, JwtContants.BlackReason reason) {
-        tokenRepository.blackAccessToken(accessToken, reason.toString(), jwtProperties.accessTokenValidity());
+        tokenRepository.blackToken(accessToken, reason.toString(), jwtProperties.accessTokenValidity());
     }
 
-    public void deleteRefreshToken(String token) {
-        tokenRepository.deleteRefreshToken(token);
+    public void blackRefreshToken(String refreshToken, JwtContants.BlackReason reason) {
+        tokenRepository.blackToken(refreshToken, reason.toString(), jwtProperties.refreshTokenValidity());
     }
 
     public Claims validateToken(String token) {
@@ -89,13 +89,13 @@ public class JwtService {
         }
 
         if (JwtContants.TokenType.ACCESS.toString().equals(claims.get(JwtContants.TYPE_DISCRIMINATOR_KEY))
-                && tokenRepository.isBlackedAccessToken(token)) {
+                && tokenRepository.isBlackedToken(token)) {
             throw new BlacklistedTokenException();
         }
 
         if (JwtContants.TokenType.REFRESH.toString().equals(claims.get(JwtContants.TYPE_DISCRIMINATOR_KEY))
-                && !tokenRepository.doesExistRefreshToken(token)) {
-            throw new InvalidTokenException();
+                && tokenRepository.isBlackedToken(token)) {
+            throw new BlacklistedTokenException();
         }
 
         return claims;

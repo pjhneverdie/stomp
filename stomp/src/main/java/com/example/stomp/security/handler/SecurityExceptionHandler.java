@@ -27,28 +27,28 @@ public class SecurityExceptionHandler
 
     private final ObjectMapper objectMapper;
 
-    // AuthenticationEntryPoint
+    // handle Exception caused by AuthenticationEntryPoint
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
             AuthenticationException authException) throws IOException {
-        handleException(response, authException, HttpStatus.UNAUTHORIZED);
+        dealLikeAppException(response, authException, HttpStatus.UNAUTHORIZED);
     }
 
-    // AuthenticationFailureHandler
+    // handle Exception caused by AuthenticationFailureHandler
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
             AuthenticationException exception) throws IOException {
-        handleException(response, exception, HttpStatus.UNAUTHORIZED);
+        dealLikeAppException(response, exception, HttpStatus.UNAUTHORIZED);
     }
 
-    // AccessDeniedHandler
+    // handle Exception caused by AccessDeniedHandler
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response,
             AccessDeniedException accessDeniedException) throws IOException {
-        handleException(response, accessDeniedException, HttpStatus.FORBIDDEN);
+        dealLikeAppException(response, accessDeniedException, HttpStatus.FORBIDDEN);
     }
 
-    // JwtFilter
+    // handle Exception caused by Filter
     public void handleFilterException(HttpServletRequest request, HttpServletResponse response, Exception e)
             throws IOException {
         switch (e) {
@@ -56,14 +56,14 @@ public class SecurityExceptionHandler
                 sendFailureResponse(response, appException);
                 break;
 
+            // unexpected exception
             default:
-                // JwtFilter throws only AppException, this is for unexpected case
-                handleException(response, e, HttpStatus.INTERNAL_SERVER_ERROR);
+                dealLikeAppException(response, e, HttpStatus.INTERNAL_SERVER_ERROR);
                 break;
         }
     }
 
-    private void handleException(HttpServletResponse response, Exception e, HttpStatus status)
+    private void dealLikeAppException(HttpServletResponse response, Exception e, HttpStatus status)
             throws IOException {
 
         // convert each Exception to AppException

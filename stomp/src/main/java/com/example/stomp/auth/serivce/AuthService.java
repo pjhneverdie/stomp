@@ -2,8 +2,11 @@ package com.example.stomp.auth.serivce;
 
 import org.springframework.stereotype.Service;
 
+import com.example.stomp.auth.dto.RtrTokenDto;
 import com.example.stomp.jwt.config.JwtContants;
 import com.example.stomp.jwt.dto.CreateAccessTokenDto;
+import com.example.stomp.jwt.dto.CreateRefreshTokenDto;
+import com.example.stomp.jwt.dto.RefreshTokenDto;
 import com.example.stomp.jwt.service.JwtService;
 import com.example.stomp.member.domain.Member;
 import com.example.stomp.member.repository.MemberRepository;
@@ -17,23 +20,26 @@ public class AuthService {
     private final JwtService jwtService;
     private final MemberRepository memberRepository;
 
-    public String createAccessToken(String preAccessToken, long memberId) {
-        jwtService.blackAccessToken(preAccessToken, JwtContants.BlackReason.REISSUE);
+    public RtrTokenDto rtr(String preAccessToken, String preRefreshToken, long memberId) {
+        nullifyTokens(preAccessToken, preRefreshToken, JwtContants.BlackReason.REISSUE);
 
-        Member member = memberRepository.findById(memberId).orElseGet(
-                () -> {
-                    throw new IllegalArgumentException();
-                });
+        Member member = memberRepository.findById(memberId).get();
 
-        return jwtService.createAccessToken(
+        String accessToken = jwtService.createAccessToken(
                 new CreateAccessTokenDto(member.getId(),
                         SecurityUtil.authoritiesToString(
                                 member.getAuthorities())));
+
+        RefreshTokenDto refreshTokenResponse = jwtService
+                .createAndSaveRefreshToken(new CreateRefreshTokenDto(
+                        member.getId()));
+
+        return new RtrTokenDto(accessToken, refreshTokenResponse);
     }
 
-    public void nullifyTokens(String accessToken, String refreshToken) {
-        jwtService.deleteRefreshToken(refreshToken);
-        jwtService.blackAccessToken(accessToken, JwtContants.BlackReason.LOGOUT);
+    public void nullifyTokens(String accessToken, String refreshToken, JwtContants.BlackReason reason) {
+        jwtService.blackAccessToken(accessToken, reason);
+        jwtService.blackRefreshToken(refreshToken, reason);
     }
 
 }

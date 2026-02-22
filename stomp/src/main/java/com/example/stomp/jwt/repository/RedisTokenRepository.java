@@ -24,7 +24,7 @@ public class RedisTokenRepository {
                 Duration.ofMillis(validity));
     }
 
-    public void blackAccessToken(String token, String reason, long validity) {
+    public void blackToken(String token, String reason, long validity) {
         String key = JwtContants.BLACKLIST_PREFIX + token;
 
         stringRedisTemplate.opsForValue().set(
@@ -39,16 +39,9 @@ public class RedisTokenRepository {
         stringRedisTemplate.delete(key);
     }
 
-    public boolean isBlackedAccessToken(String token) {
+    public boolean isBlackedToken(String token) {
         String key = JwtContants.BLACKLIST_PREFIX + token;
 
         return stringRedisTemplate.hasKey(key);
     }
-
-    public boolean doesExistRefreshToken(String token) {
-        String key = JwtContants.REFRESH_TOKEN_PREFIX + token;
-
-        return stringRedisTemplate.hasKey(key);
-    }
-
 }

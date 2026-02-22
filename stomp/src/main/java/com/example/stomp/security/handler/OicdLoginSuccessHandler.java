@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 import com.example.stomp.jwt.dto.CreateAccessTokenDto;
 import com.example.stomp.jwt.dto.CreateRefreshTokenDto;
-import com.example.stomp.jwt.dto.CreateRefreshTokenResponse;
+import com.example.stomp.jwt.dto.RefreshTokenDto;
 import com.example.stomp.jwt.service.JwtService;
 import com.example.stomp.member.dto.OidcMemberDetails;
 import com.example.stomp.shared.dto.ApiResponse;
@@ -40,7 +40,7 @@ public class OicdLoginSuccessHandler implements AuthenticationSuccessHandler {
                                 memberDetails.getMemberId(),
                                 SecurityUtil.authoritiesToString(memberDetails.getAuthorities())));
 
-                CreateRefreshTokenResponse refreshTokenResponse = jwtService
+                RefreshTokenDto refreshTokenResponse = jwtService
                                 .createAndSaveRefreshToken(new CreateRefreshTokenDto(
                                                 memberDetails.getMemberId()));
 

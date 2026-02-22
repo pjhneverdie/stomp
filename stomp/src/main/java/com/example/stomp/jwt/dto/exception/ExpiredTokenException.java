@@ -8,7 +8,6 @@ public class ExpiredTokenException extends AppException {
 
     public ExpiredTokenException() {
         super("you are using expired jwt");
-
     }
 
     @Override

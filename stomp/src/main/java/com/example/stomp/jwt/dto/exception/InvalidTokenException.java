@@ -7,7 +7,7 @@ import com.example.stomp.shared.dto.exception.AppException;
 public class InvalidTokenException extends AppException {
 
     public InvalidTokenException() {
-        super("you are using invalid token");
+        super("");
     }
 
     @Override

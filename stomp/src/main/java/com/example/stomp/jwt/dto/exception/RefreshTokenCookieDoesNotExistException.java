@@ -4,9 +4,9 @@ import org.springframework.http.HttpStatus;
 
 import com.example.stomp.shared.dto.exception.AppException;
 
-public class BlacklistedTokenException extends AppException {
+public class RefreshTokenCookieDoesNotExistException extends AppException {
 
-    public BlacklistedTokenException() {
+    public RefreshTokenCookieDoesNotExistException() {
         super("");
     }
 
