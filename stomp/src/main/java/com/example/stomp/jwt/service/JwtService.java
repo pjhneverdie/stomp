@@ -15,7 +15,7 @@ import com.example.stomp.jwt.dto.CreateRefreshTokenResponse;
 import com.example.stomp.jwt.dto.exception.BlacklistedTokenException;
 import com.example.stomp.jwt.dto.exception.ExpiredTokenException;
 import com.example.stomp.jwt.dto.exception.InvalidTokenException;
-import com.example.stomp.jwt.repository.TokenRepository;
+import com.example.stomp.jwt.repository.RedisTokenRepository;
 import com.example.stomp.jwt.service.provider.JwtProvider;
 
 import io.jsonwebtoken.Claims;
@@ -30,14 +30,8 @@ public class JwtService {
 
     private final JwtProvider jwtProvider;
     private final JwtProperties jwtProperties;
-    private final TokenRepository tokenRepository;
+    private final RedisTokenRepository tokenRepository;
 
-    // 밖에 제공용
-    public Long getMemberId(String token) {
-        return Long.parseLong(jwtProvider.parseClaims(token).getSubject());
-    }
-
-    // 엑세스 토큰 생성 메서드
     public String createAccessToken(CreateAccessTokenDto cTokenDto) {
         Map<String, Object> claims = new HashMap<>();
 
@@ -54,7 +48,6 @@ public class JwtService {
                 Date.from(expiry));
     }
 
-    // 리프레시 토큰 생성 및 저장 메서드
     public CreateRefreshTokenResponse createAndSaveRefreshToken(CreateRefreshTokenDto cTokenDto) {
         Map<String, Object> claims = new HashMap<>();
 
@@ -76,23 +69,15 @@ public class JwtService {
         return new CreateRefreshTokenResponse(refreshToken, jwtProperties.refreshTokenValidity() / 1000);
     }
 
-    // 엑세스 토큰 블랙리스트 등록 메서드
     public void blackAccessToken(String accessToken, JwtContants.BlackReason reason) {
-        long expirationTime = jwtProvider.parseClaims(accessToken).getExpiration().getTime();
-        long now = System.currentTimeMillis();
-
-        if (expirationTime > now) {
-            tokenRepository.blackAccessToken(accessToken, reason.toString(), expirationTime - now);
-        }
+        tokenRepository.blackAccessToken(accessToken, reason.toString(), jwtProperties.accessTokenValidity());
     }
 
-    // 리프레시 토큰 삭제 메서드
     public void deleteRefreshToken(String token) {
         tokenRepository.deleteRefreshToken(token);
     }
 
-    // 토큰 검증 메서드
-    public boolean validateToken(String token) {
+    public Claims validateToken(String token) {
         Claims claims;
 
         try {
@@ -113,7 +98,7 @@ public class JwtService {
             throw new InvalidTokenException();
         }
 
-        return true;
+        return claims;
     }
 
 }

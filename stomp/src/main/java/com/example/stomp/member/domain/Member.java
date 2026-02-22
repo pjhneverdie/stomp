@@ -1,5 +1,10 @@
 package com.example.stomp.member.domain;
 
+import java.util.List;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
 import com.example.stomp.member.enum_type.MemberRole;
 import com.example.stomp.shared.domain.BaseEntity;
 
@@ -7,7 +12,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,10 +31,14 @@ public class Member extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
-    private MemberRole memberRole = MemberRole.FREE;
+    private MemberRole role = MemberRole.FREE;
 
     public static Member createMember(String email, String picture) {
         return new Member(email, picture, MemberRole.FREE);
+    }
+
+    public List<GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority(this.role.toString()));
     }
 
 }

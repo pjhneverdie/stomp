@@ -13,11 +13,11 @@ import org.springframework.web.bind.support.WebDataBinderFactory;
 
 @Component
 @RequiredArgsConstructor
-public class AccessTokenArgumentResolver implements HandlerMethodArgumentResolver {
+public class AccessTokenHeaderArgumentResolver implements HandlerMethodArgumentResolver {
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-        return parameter.hasParameterAnnotation(AccessToken.class)
+        return parameter.hasParameterAnnotation(AccessTokenHeader.class)
                 && parameter.getParameterType().equals(String.class);
     }
 
@@ -26,6 +26,8 @@ public class AccessTokenArgumentResolver implements HandlerMethodArgumentResolve
             NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
         String authorizationHeader = webRequest.getHeader(HttpHeaders.AUTHORIZATION);
 
+        // cut Bearer
         return authorizationHeader.substring(7);
     }
+
 }

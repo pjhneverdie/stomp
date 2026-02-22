@@ -11,26 +11,26 @@ import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
-public class TokenRepository {
+public class RedisTokenRepository {
 
     private final StringRedisTemplate stringRedisTemplate;
 
-    public void saveRefreshToken(long id, String token, long validity) {
+    public void saveRefreshToken(long memberId, String token, long validity) {
         String key = JwtContants.REFRESH_TOKEN_PREFIX + token;
 
         stringRedisTemplate.opsForValue().set(
                 key,
-                String.valueOf(id),
+                String.valueOf(memberId),
                 Duration.ofMillis(validity));
     }
 
-    public void blackAccessToken(String token, String reason, long leftValidity) {
+    public void blackAccessToken(String token, String reason, long validity) {
         String key = JwtContants.BLACKLIST_PREFIX + token;
 
         stringRedisTemplate.opsForValue().set(
                 key,
                 reason,
-                Duration.ofMillis(leftValidity));
+                Duration.ofMillis(validity));
     }
 
     public void deleteRefreshToken(String token) {
@@ -48,7 +48,7 @@ public class TokenRepository {
     public boolean doesExistRefreshToken(String token) {
         String key = JwtContants.REFRESH_TOKEN_PREFIX + token;
 
-        return stringRedisTemplate.hasKey(key) && stringRedisTemplate.opsForValue().get(key).equals(token);
+        return stringRedisTemplate.hasKey(key);
     }
 
 }

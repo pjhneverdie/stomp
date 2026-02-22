@@ -10,7 +10,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.web.SecurityFilterChain;
 
 import com.example.stomp.member.service.SimpleOidcUserService;
-import com.example.stomp.security.entrypoint.UnauthenticatedEntryPoint;
 import com.example.stomp.security.handler.OicdLoginSuccessHandler;
 import com.example.stomp.security.handler.SecurityExceptionHandler;
 
@@ -60,5 +59,4 @@ public class SecurityConfig {
         return http.build();
     }
 
-    
 }
