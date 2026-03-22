@@ -7,16 +7,15 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.example.stomp.acommon.constant.SessionConstant;
 import com.example.stomp.member.service.SimpleOidcUserService;
-import com.example.stomp.security.filter.LoginFilter;
-import com.example.stomp.security.filter.LogoutFilter;
-import com.example.stomp.security.filter.ReissueFilter;
-import com.example.stomp.security.filter.SecurityContextFilter;
 import com.example.stomp.security.handler.OicdLoginSuccessHandler;
 import com.example.stomp.security.handler.SecurityExceptionHandler;
+import com.example.stomp.security.handler.SessionLogoutSuccessHandler;
+import com.example.stomp.security.repository.RedisOAuth2AuthorizationRequestRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,29 +27,11 @@ public class SecurityConfig {
         private final SimpleOidcUserService simpleOidcUserService;
         private final OicdLoginSuccessHandler oicdLoginSuccessHandler;
         private final SecurityExceptionHandler securityExceptionHandler;
+        private final SessionLogoutSuccessHandler sessionLogoutSuccessHandler;
+        private final RedisOAuth2AuthorizationRequestRepository oAuth2AuthorizationRequestRepository;
 
-        private final LoginFilter loginFilter;
-        private final ReissueFilter reissueFilter;
-        private final LogoutFilter logoutFilter;
-        private final SecurityContextFilter securityContextFilter;
+        private static final String LOGOUT_PATH = "/logout";
 
-        public static final String REISSUE_URL = "/auth/reissue";
-        public static final String LOGOUT_URL = "/auth/logout";
-
-        public static final String[] UNAUTHENTICATABLE_URL = {
-                        "/",
-                        "/favicon.ico",
-                        REISSUE_URL
-        };
-
-        public static final String[] LOGIN_FILTER_WHITE_LIST = {
-                        "/",
-                        "/favicon.ico",
-                        REISSUE_URL,
-                        LOGOUT_URL
-        };
-
-        @Bean
         @Profile({ "local", "test" })
         public WebSecurityCustomizer webSecurityCustomizerDebug() {
                 return (web) -> web.debug(true);
@@ -64,12 +45,26 @@ public class SecurityConfig {
 
         @Bean
         SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-                http.csrf(AbstractHttpConfigurer::disable)
-                                .httpBasic(AbstractHttpConfigurer::disable)
-                                .formLogin(AbstractHttpConfigurer::disable);
+                http
+                                .authorizeHttpRequests(auth -> auth
+                                                .requestMatchers("/").permitAll()
+                                                .anyRequest().authenticated());
+
+                http
+                                .httpBasic(AbstractHttpConfigurer::disable) // we are using https session login
+                                .formLogin(AbstractHttpConfigurer::disable); // we are using OIDC
+                http
+                                .requestCache(requestCache -> requestCache.disable());
+
+                http.sessionManagement(session -> session
+                                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                                .securityContext(context -> context
+                                                .requireExplicitSave(false)); // auto save
 
                 http.oauth2Login((config) -> config
                                 .userInfoEndpoint((endpoint) -> endpoint.oidcUserService(simpleOidcUserService))
+                                .authorizationEndpoint(authorization -> authorization
+                                                .authorizationRequestRepository(oAuth2AuthorizationRequestRepository))
                                 .successHandler(oicdLoginSuccessHandler)
                                 .failureHandler(securityExceptionHandler))
                                 .exceptionHandling(
@@ -77,15 +72,11 @@ public class SecurityConfig {
                                                                 .authenticationEntryPoint(securityExceptionHandler)
                                                                 .accessDeniedHandler(securityExceptionHandler));
 
-                http.authorizeHttpRequests((authorize) -> authorize
-                                .requestMatchers(UNAUTHENTICATABLE_URL)
-                                .permitAll()
-                                .anyRequest().authenticated());
-
-                http.addFilterBefore(reissueFilter, UsernamePasswordAuthenticationFilter.class);
-                http.addFilterBefore(logoutFilter, UsernamePasswordAuthenticationFilter.class);
-                http.addFilterBefore(loginFilter, UsernamePasswordAuthenticationFilter.class);
-                http.addFilterAfter(securityContextFilter, LoginFilter.class);
+                http.logout(logout -> logout
+                                .logoutUrl(LOGOUT_PATH)
+                                .deleteCookies(SessionConstant.COOKIE_NAME)
+                                .invalidateHttpSession(true)
+                                .logoutSuccessHandler(sessionLogoutSuccessHandler));
 
                 return http.build();
         }

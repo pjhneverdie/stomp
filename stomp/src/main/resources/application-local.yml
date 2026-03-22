@@ -4,11 +4,12 @@ spring:
       on-profile: local
     import:
       - "optional:classpath:/application-local-security.yml"
+      - "optional:file:local.env[.properties]"
 
   docker:
     compose:
       enabled: true
-      file: /workspaces/codespaces-blank/stomp/docker-compose-local.yml
+      file: /workspaces/codespaces-blank/docker-compose-local.yml
       lifecycle-management: start-and-stop
 
   flyway:
@@ -26,6 +27,7 @@ spring:
     redis:
       host: localhost
       port: 6379
+      password: localpass
 
   rabbitmq:
     host: localhost
@@ -34,9 +36,3 @@ spring:
     password: localpass
     stomp:
       port: 61613
-
-jwt:
-  secret: v9yBEHMcQfTjWnZr4u7xACFJaNdRgUkXp2s5v8yBEGKbPeShVmYq3tv9yBEHMcQfTjdsakjdsajqqhfhfehfhdsd
-  access-token-validity: 3600000        # (60 * 60 * 1000)
-  refresh-token-validity: 86400000 # (60 * 60 * 24 * 1000)
-

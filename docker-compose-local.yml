@@ -1,0 +1,35 @@
+services:
+  mysql:
+    container_name: local-mysql
+    image: mysql:8.4
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: localdb
+      MYSQL_ROOT_PASSWORD: rootpass
+    volumes:
+      - ./volumes/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+      - ./volumes/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./volumes/mysql/data:/var/lib/mysql
+
+  redis:
+    container_name: local-redis
+    image: redis:8.6
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./volumes/redis/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./volumes/redis/data:/data
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+
+  rabbitmq:
+    container_name: local-rabbitmq
+    image: rabbitmq:4.2-management
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management Console
+      - "61613:61613" # STOMP
+    volumes:
+      - ./volumes/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./volumes/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
+      - ./volumes/rabbitmq/data:/var/lib/rabbitmq

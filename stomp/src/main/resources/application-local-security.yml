@@ -1,4 +1,18 @@
+server:
+  servlet:
+    session:
+      timeout: 48h
+      cookie:
+        secure: true
+        same-site: lax
+        
 spring:
+  session:
+    redis:
+      flush-mode: on_save
+      repository-type: default
+      namespace: "spring:session"
+      
   security:
     oauth2:
       client:
@@ -6,14 +20,14 @@ spring:
           google:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
-
-            redirect-uri: "https://localhost:8080/login/oauth2/code/google"
+            
+            redirect-uri: "https://musical-bassoon-4jg7r59p5vqw2p5-8080.app.github.dev/login/oauth2/code/google"
 
           kakao:
             client-id: ${KAKAO_CLIENT_ID}
             client-secret: ${KAKAO_CLIENT_SECRET}
 
-            redirect-uri: "https://localhost:8080/login/oauth2/code/kakao"
+            redirect-uri: "https://musical-bassoon-4jg7r59p5vqw2p5-8080.app.github.dev/login/oauth2/code/kakao"
 
             authorization-grant-type: authorization_code
             client-authentication-method: client_secret_post
@@ -26,3 +40,4 @@ spring:
         provider:
           kakao:
             issuer-uri: https://kauth.kakao.com
+      

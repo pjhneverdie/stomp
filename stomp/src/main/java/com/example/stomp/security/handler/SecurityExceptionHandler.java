@@ -7,13 +7,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizationRequestRepository;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
 
-import com.example.stomp.shared.dto.ApiResponse;
-import com.example.stomp.shared.dto.exception.AppException;
+import com.example.stomp.acommon.dto.ApiResponse;
+import com.example.stomp.acommon.dto.exception.AppException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,42 +32,25 @@ public class SecurityExceptionHandler
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
             AuthenticationException authException) throws IOException {
-        dealLikeAppException(response, authException, HttpStatus.UNAUTHORIZED);
+        convertToAppException(response, authException, HttpStatus.UNAUTHORIZED);
     }
 
     // handle Exception caused by AuthenticationFailureHandler
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
             AuthenticationException exception) throws IOException {
-        dealLikeAppException(response, exception, HttpStatus.UNAUTHORIZED);
+        convertToAppException(response, exception, HttpStatus.UNAUTHORIZED);
     }
 
     // handle Exception caused by AccessDeniedHandler
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response,
             AccessDeniedException accessDeniedException) throws IOException {
-        dealLikeAppException(response, accessDeniedException, HttpStatus.FORBIDDEN);
+        convertToAppException(response, accessDeniedException, HttpStatus.FORBIDDEN);
     }
 
-    // handle Exception caused by Filter
-    public void handleFilterException(HttpServletRequest request, HttpServletResponse response, Exception e)
+    private void convertToAppException(HttpServletResponse response, Exception e, HttpStatus status)
             throws IOException {
-        switch (e) {
-            case AppException appException:
-                sendFailureResponse(response, appException);
-                break;
-
-            // unexpected exception
-            default:
-                dealLikeAppException(response, e, HttpStatus.INTERNAL_SERVER_ERROR);
-                break;
-        }
-    }
-
-    private void dealLikeAppException(HttpServletResponse response, Exception e, HttpStatus status)
-            throws IOException {
-
-        // convert each Exception to AppException
         AppException appException = new AppException(e.getMessage()) {
             @Override
             public HttpStatus getHttpStatus() {
@@ -78,6 +62,10 @@ public class SecurityExceptionHandler
     }
 
     private void sendFailureResponse(HttpServletResponse response, AppException e) throws IOException {
+        System.out.println("예외 발생");
+        System.out.println(e.getClass());
+         System.out.println("예외 발생");
+         
         response.setStatus(e.getHttpStatus().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());

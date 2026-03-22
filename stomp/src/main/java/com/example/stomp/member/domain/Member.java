@@ -5,8 +5,8 @@ import java.util.List;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import com.example.stomp.acommon.domain.BaseEntity;
 import com.example.stomp.member.enum_type.MemberRole;
-import com.example.stomp.shared.domain.BaseEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
