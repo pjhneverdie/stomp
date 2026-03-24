@@ -7,14 +7,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizationRequestRepository;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
 
-import com.example.stomp.acommon.dto.ApiResponse;
-import com.example.stomp.acommon.dto.exception.AppException;
+import com.example.stomp.app.dto.ApiResponse;
+import com.example.stomp.app.dto.exception.AppException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,6 +32,7 @@ public class SecurityExceptionHandler
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
             AuthenticationException authException) throws IOException {
+                System.out.println("예외 발생 AuthenticationEntryPoint");
         convertToAppException(response, authException, HttpStatus.UNAUTHORIZED);
     }
 
@@ -39,6 +40,7 @@ public class SecurityExceptionHandler
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
             AuthenticationException exception) throws IOException {
+                System.out.println("예외 발생 AuthenticationFailureHandler");
         convertToAppException(response, exception, HttpStatus.UNAUTHORIZED);
     }
 
@@ -46,6 +48,7 @@ public class SecurityExceptionHandler
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response,
             AccessDeniedException accessDeniedException) throws IOException {
+                 System.out.println("예외 발생 AccessDeniedHandler");
         convertToAppException(response, accessDeniedException, HttpStatus.FORBIDDEN);
     }
 
@@ -62,10 +65,10 @@ public class SecurityExceptionHandler
     }
 
     private void sendFailureResponse(HttpServletResponse response, AppException e) throws IOException {
-        System.out.println("예외 발생");
-        System.out.println(e.getClass());
-         System.out.println("예외 발생");
-         
+       
+        e.printStackTrace();
+       System.out.println("예외 발생");
+
         response.setStatus(e.getHttpStatus().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());

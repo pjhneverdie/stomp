@@ -1,4 +1,4 @@
-package com.example.stomp.acommon.dto.exception;
+package com.example.stomp.app.dto.exception;
 
 import org.springframework.http.HttpStatus;
 

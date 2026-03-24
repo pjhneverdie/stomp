@@ -10,7 +10,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
-import com.example.stomp.acommon.constant.SessionConstant;
+import com.example.stomp.app.constant.SessionConstant;
 import com.example.stomp.member.service.SimpleOidcUserService;
 import com.example.stomp.security.handler.OicdLoginSuccessHandler;
 import com.example.stomp.security.handler.SecurityExceptionHandler;
@@ -54,7 +54,7 @@ public class SecurityConfig {
                                 .httpBasic(AbstractHttpConfigurer::disable) // we are using https session login
                                 .formLogin(AbstractHttpConfigurer::disable); // we are using OIDC
                 http
-                                .requestCache(requestCache -> requestCache.disable());
+                                .requestCache(requestCache -> requestCache.disable()); // we provide API only
 
                 http.sessionManagement(session -> session
                                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))

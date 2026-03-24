@@ -3,6 +3,8 @@ package com.example.stomp.member.service;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
+import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Component;
 
@@ -22,12 +24,14 @@ public class SimpleOidcUserService extends OidcUserService {
     public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
         OidcUser oidcUser = super.loadUser(userRequest);
 
-        Member member = memberRepository.findByEmail(oidcUser.getEmail())
+        memberRepository.findByEmail(oidcUser.getEmail())
                 .orElseGet(
                         () -> memberRepository.save(Member.createMember(oidcUser.getEmail(), oidcUser.getPicture())));
 
-        return new OidcMemberDetails(member.getId(), member.getAuthorities(), oidcUser.getIdToken(),
-                oidcUser.getUserInfo());
+        return new DefaultOidcUser(
+                oidcUser.getAuthorities(),
+                oidcUser.getIdToken(),
+                new OidcUserInfo(oidcUser.getAttributes()));
     }
 
 }

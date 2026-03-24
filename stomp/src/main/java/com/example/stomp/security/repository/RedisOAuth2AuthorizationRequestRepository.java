@@ -4,6 +4,7 @@ import java.time.Duration;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.stereotype.Component;
@@ -21,33 +22,31 @@ public class RedisOAuth2AuthorizationRequestRepository
 
     @Override
     public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
-        System.out.println("bro 1");
-        System.out.println("bro 1");
-        System.out.println("bro 1");
-        System.out.println("bro 1");
         return redisTemplate.opsForValue().get(request.getParameter(OAuth2ParameterNames.STATE));
     }
 
     @Override
     public void saveAuthorizationRequest(OAuth2AuthorizationRequest authorizationRequest, HttpServletRequest request,
             HttpServletResponse response) {
-        System.out.println("bro 2");
-        System.out.println("bro 2");
-        System.out.println("bro 2");
-        System.out.println("bro 2");
-        redisTemplate.opsForValue().set(authorizationRequest.getState(), authorizationRequest, Duration.ofSeconds(2));
+        redisTemplate.opsForValue().set(authorizationRequest.getState(), authorizationRequest,
+                Duration.ofSeconds(60));
+
+                
+        System.out.println("ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd");
+        System.out.println("저장완료!!!");
+        System.out.println("ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd");
     }
 
     @Override
     public OAuth2AuthorizationRequest removeAuthorizationRequest(HttpServletRequest request,
             HttpServletResponse response) {
-        System.out.println("bro 3");
-        System.out.println("bro 3");
-        System.out.println("bro 3");
-        System.out.println("bro 3");
         String state = request.getParameter(OAuth2ParameterNames.STATE);
 
         OAuth2AuthorizationRequest authRequest = redisTemplate.opsForValue().get(state);
+
+        System.out.println("ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd");
+        System.out.println(authRequest == null);
+        System.out.println("ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd");
 
         if (state != null) {
             redisTemplate.delete(state);

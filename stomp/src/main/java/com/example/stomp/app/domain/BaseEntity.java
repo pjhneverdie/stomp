@@ -1,4 +1,4 @@
-package com.example.stomp.acommon.domain;
+package com.example.stomp.app.domain;
 
 import java.time.LocalDateTime;
 

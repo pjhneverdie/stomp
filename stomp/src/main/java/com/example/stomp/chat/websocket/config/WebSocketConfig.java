@@ -6,7 +6,7 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
-import com.example.stomp.acommon.rabbitmq.config.RabbitMQProperties;
+import com.example.stomp.app.infra.rabbitmq.config.RabbitMQProperties;
 
 import lombok.RequiredArgsConstructor;
 

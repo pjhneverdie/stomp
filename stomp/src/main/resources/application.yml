@@ -1,5 +1,5 @@
 spring:
-  application:
-    name: stomp
   profiles:
     active: local
+  config:
+    import: "optional:classpath:/${spring.profiles.active}/yml/application-${spring.profiles.active}.yml"

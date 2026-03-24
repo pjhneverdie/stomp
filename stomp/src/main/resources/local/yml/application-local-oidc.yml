@@ -5,12 +5,15 @@ server:
       cookie:
         secure: true
         same-site: lax
-        
+
 spring:
+  config:
+    import:
+      - optional:file:/workspaces/codespaces-blank/stomp/local.env[.properties]
   session:
     redis:
-      flush-mode: on_save
-      repository-type: default
+      flush-mode: immediate # save session whenever there are updates
+      repository-type: default # redisSessionRepository is the default implementation. however, if you want to be explicit about it, you can set the following property in your application
       namespace: "spring:session"
       
   security:
@@ -20,7 +23,7 @@ spring:
           google:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
-            
+  
             redirect-uri: "https://musical-bassoon-4jg7r59p5vqw2p5-8080.app.github.dev/login/oauth2/code/google"
 
           kakao:

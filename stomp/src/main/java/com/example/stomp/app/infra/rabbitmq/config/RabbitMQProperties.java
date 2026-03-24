@@ -1,4 +1,4 @@
-package com.example.stomp.acommon.rabbitmq.config;
+package com.example.stomp.app.infra.rabbitmq.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
