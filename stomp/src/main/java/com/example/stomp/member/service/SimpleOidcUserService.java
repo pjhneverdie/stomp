@@ -24,14 +24,12 @@ public class SimpleOidcUserService extends OidcUserService {
     public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
         OidcUser oidcUser = super.loadUser(userRequest);
 
-        memberRepository.findByEmail(oidcUser.getEmail())
+        Member member = memberRepository.findByEmail(oidcUser.getEmail())
                 .orElseGet(
                         () -> memberRepository.save(Member.createMember(oidcUser.getEmail(), oidcUser.getPicture())));
 
-        return new DefaultOidcUser(
-                oidcUser.getAuthorities(),
-                oidcUser.getIdToken(),
-                new OidcUserInfo(oidcUser.getAttributes()));
+        return new OidcMemberDetails(member.getId(), member.getAuthorities(), oidcUser.getIdToken(),
+                oidcUser.getUserInfo());
     }
 
 }
