@@ -7,22 +7,19 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.security.jackson2.SecurityJackson2Modules;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 
 import lombok.RequiredArgsConstructor;
 
 @Configuration
 @RequiredArgsConstructor
 public class RedisConfig {
-    private final ObjectMapper objectMapper;
     private final RedisProperties redisProperties;
 
     @Bean
@@ -48,33 +45,22 @@ public class RedisConfig {
         return template;
     }
 
-    // @formatter:off
-    // By default, Spring Session uses Java Serialization to serialize the session attributes
-    // @formatter:on
     @Bean
-    public RedisSerializer<Object> springSessionDefaultRedisSerializer() {
+    public RedisSerializer<OAuth2AuthorizationRequest> oauth2RequestSerializer() {
+        ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModules(SecurityJackson2Modules.getModules(getClass().getClassLoader()));
-        objectMapper.activateDefaultTyping(
-                LaissezFaireSubTypeValidator.instance,
-                ObjectMapper.DefaultTyping.NON_FINAL,
-                JsonTypeInfo.As.PROPERTY);
-
-        return new GenericJackson2JsonRedisSerializer(objectMapper);
+        return new Jackson2JsonRedisSerializer<>(objectMapper, OAuth2AuthorizationRequest.class);
     }
 
-    // @formatter:off
-    // use JdkSerializationRedisSerializer only when i save the OAuth2AuthorizationRequest
-    // @formatter:on
     @Bean
     public RedisTemplate<String, OAuth2AuthorizationRequest> oauth2RequestRedisTemplate(
             RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, OAuth2AuthorizationRequest> template = new RedisTemplate<>();
-        template.setConnectionFactory(connectionFactory);
 
-        JdkSerializationRedisSerializer serializer = new JdkSerializationRedisSerializer();
-        template.setKeySerializer(template.getStringSerializer());
-        template.setValueSerializer(serializer);
-        template.afterPropertiesSet();
+        template.setConnectionFactory(connectionFactory);
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(oauth2RequestSerializer());
+
         return template;
     }
 

@@ -4,7 +4,6 @@ import java.time.Duration;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
-import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.stereotype.Component;
@@ -17,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RedisOAuth2AuthorizationRequestRepository
         implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
-
     private final RedisTemplate<String, OAuth2AuthorizationRequest> redisTemplate;
 
     @Override

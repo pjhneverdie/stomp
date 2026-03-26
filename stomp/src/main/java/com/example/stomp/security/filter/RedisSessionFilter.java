@@ -1,18 +1,16 @@
 package com.example.stomp.security.filter;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.example.stomp.app.constant.SessionConstant;
+import com.example.stomp.app.util.SecurityUtil;
 import com.example.stomp.security.dto.SimpleAuthenticationToken;
 
 import jakarta.servlet.FilterChain;
@@ -25,34 +23,30 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class RedisSessionFilter extends OncePerRequestFilter {
-    private final RedisTemplate<String, Object> redisTemplate;
+        private final RedisTemplate<String, Object> redis;
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
+        @Override
+        protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                        FilterChain filterChain)
+                        throws ServletException, IOException {
+                HttpSession session = request.getSession(false);
 
-        if (session == null) {
-
+                if (session == null) {
+                        filterChain.doFilter(request, response);
+                } else {
+                        SecurityContextHolder.getContext().setAuthentication(createAuthentication(session));
+                }
         }
 
-        Optional.of(redisTemplate.opsForHash().entries(session.getId()))
-                .filter(map -> !map.isEmpty())
-                .ifPresentOrElse(map -> {
-                    String auths = (String) map.get("authorities");
-                    String memberId = (String) map.get("memberId");
+        private Authentication createAuthentication(HttpSession session) {
+                Map<Object, Object> sessionMap = redis.opsForHash().entries(session.getId());
 
-                    long id = Long.parseLong(memberId);
-                    List<SimpleGrantedAuthority> authorities = Arrays.stream(auths.split(","))
-                            .map(SimpleGrantedAuthority::new)
-                            .toList();
+                String auths = (String) sessionMap.get(SessionConstant.SESSION_AUHTORITIES_KEY);
+                String memberId = (String) sessionMap.get(SessionConstant.SESSION_MEMBER_ID_KEY);
 
-                    SimpleAuthenticationToken authentication = new SimpleAuthenticationToken(
-                            new SimpleAuthenticationToken.SimpleMemberDetails(id, authorities));
-                    SecurityContextHolder.createEmptyContext().setAuthentication(authentication);
-                }, () -> {
-
-                });
-    }
+                return new SimpleAuthenticationToken(
+                                new SimpleAuthenticationToken.SimpleMemberDetails(Long.parseLong(memberId),
+                                                SecurityUtil.stringToAuthorities(auths)));
+        }
 
 }
