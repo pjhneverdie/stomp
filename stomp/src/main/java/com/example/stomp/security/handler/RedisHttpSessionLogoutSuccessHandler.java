@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class SessionLogoutSuccessHandler implements LogoutSuccessHandler {
+public class RedisHttpSessionLogoutSuccessHandler implements LogoutSuccessHandler {
     private final ObjectMapper objectMapper;
 
     @Override

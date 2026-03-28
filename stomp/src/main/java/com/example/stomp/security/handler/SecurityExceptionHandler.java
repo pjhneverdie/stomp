@@ -31,7 +31,7 @@ public class SecurityExceptionHandler
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
             AuthenticationException authException) throws IOException {
-                System.out.println("예외 발생 AuthenticationEntryPoint");
+        logBriefError("AuthenticationEntryPoint", authException);
         convertToAppException(response, authException, HttpStatus.UNAUTHORIZED);
     }
 
@@ -39,7 +39,7 @@ public class SecurityExceptionHandler
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
             AuthenticationException exception) throws IOException {
-                System.out.println("예외 발생 AuthenticationFailureHandler");
+        logBriefError("AuthenticationFailureHandler", exception);
         convertToAppException(response, exception, HttpStatus.UNAUTHORIZED);
     }
 
@@ -47,7 +47,7 @@ public class SecurityExceptionHandler
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response,
             AccessDeniedException accessDeniedException) throws IOException {
-                 System.out.println("예외 발생 AccessDeniedHandler");
+        logBriefError("AccessDeniedHandler", accessDeniedException);
         convertToAppException(response, accessDeniedException, HttpStatus.FORBIDDEN);
     }
 
@@ -64,16 +64,27 @@ public class SecurityExceptionHandler
     }
 
     private void sendFailureResponse(HttpServletResponse response, AppException e) throws IOException {
-       
-        e.printStackTrace();
-       System.out.println("예외 발생");
-
         response.setStatus(e.getHttpStatus().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
 
         response.getWriter().write(
                 objectMapper.writeValueAsString(ApiResponse.createDefaultFailureResponse(e)));
+    }
+
+    private void logBriefError(String handlerName, Exception e) {
+        Throwable rootCause = e;
+        while (rootCause.getCause() != null) {
+            rootCause = rootCause.getCause();
+        }
+
+        StackTraceElement firstLine = rootCause.getStackTrace()[0];
+        System.out.printf("[%s] 근본 원인: %s - %s (발생위치: %s:%d)%n",
+                handlerName,
+                rootCause.getClass().getSimpleName(),
+                rootCause.getMessage(),
+                firstLine.getFileName(),
+                firstLine.getLineNumber());
     }
 
 }

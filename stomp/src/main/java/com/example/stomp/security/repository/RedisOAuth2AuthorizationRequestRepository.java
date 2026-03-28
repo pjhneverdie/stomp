@@ -43,7 +43,6 @@ public class RedisOAuth2AuthorizationRequestRepository
         OAuth2AuthorizationRequest authRequest = redisTemplate.opsForValue().get(state);
 
         System.out.println("ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd");
-        System.out.println(authRequest == null);
         System.out.println("ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd");
 
         if (state != null) {
