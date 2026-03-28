@@ -12,16 +12,6 @@ services:
       - ./volumes/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./volumes/mysql/data:/var/lib/mysql
 
-  redis:
-    container_name: local-redis
-    image: redis:8.6
-    ports:
-      - "6379:6379"
-    volumes:
-      - ./volumes/redis/redis.conf:/usr/local/etc/redis/redis.conf
-      - ./volumes/redis/data:/data
-    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
-
   rabbitmq:
     container_name: local-rabbitmq
     image: rabbitmq:4.2-management
@@ -33,3 +23,13 @@ services:
       - ./volumes/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
       - ./volumes/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
       - ./volumes/rabbitmq/data:/var/lib/rabbitmq
+
+  redis:
+    container_name: local-redis
+    image: redis:8.6
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./volumes/redis/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./volumes/redis/data:/data
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
