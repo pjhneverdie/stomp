@@ -21,6 +21,7 @@ public class RedisOAuth2AuthorizationRequestRepository
     @Override
     public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
         return redisTemplate.opsForValue().get(request.getParameter(OAuth2ParameterNames.STATE));
+        
     }
 
     @Override
@@ -28,11 +29,6 @@ public class RedisOAuth2AuthorizationRequestRepository
             HttpServletResponse response) {
         redisTemplate.opsForValue().set(authorizationRequest.getState(), authorizationRequest,
                 Duration.ofSeconds(60));
-
-                
-        System.out.println("ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd");
-        System.out.println("저장완료!!!");
-        System.out.println("ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd");
     }
 
     @Override
@@ -41,9 +37,6 @@ public class RedisOAuth2AuthorizationRequestRepository
         String state = request.getParameter(OAuth2ParameterNames.STATE);
 
         OAuth2AuthorizationRequest authRequest = redisTemplate.opsForValue().get(state);
-
-        System.out.println("ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd");
-        System.out.println("ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd");
 
         if (state != null) {
             redisTemplate.delete(state);

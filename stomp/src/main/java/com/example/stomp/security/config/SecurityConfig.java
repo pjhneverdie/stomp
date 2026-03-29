@@ -36,6 +36,7 @@ public class SecurityConfig {
 
         private static final String LOGOUT_PATH = "/logout";
 
+        @Bean
         @Profile({ "local", "test" })
         public WebSecurityCustomizer webSecurityCustomizerDebug() {
                 return (web) -> web.debug(true);
@@ -81,7 +82,6 @@ public class SecurityConfig {
                 http.logout(logout -> logout
                                 .logoutUrl(LOGOUT_PATH)
                                 .deleteCookies(SessionConstant.COOKIE_NAME)
-                                .invalidateHttpSession(true)
                                 .addLogoutHandler(redisHttpSessionLogoutHandler)
                                 .logoutSuccessHandler(sessionLogoutSuccessHandler));
 

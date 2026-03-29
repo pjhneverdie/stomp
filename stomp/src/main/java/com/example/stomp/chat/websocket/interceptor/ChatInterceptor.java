@@ -21,7 +21,6 @@ public class ChatInterceptor implements ChannelInterceptor {
         switch (accessor.getCommand()) {
             case CONNECT:
 
-                // 여기서는 JWT 인증
 
                 break;
             case SUBSCRIBE:

@@ -8,10 +8,12 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import com.example.stomp.app.domain.BaseEntity;
 import com.example.stomp.member.enum_type.MemberRole;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.OneToOne;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -33,8 +35,21 @@ public class Member extends BaseEntity {
     @Column(nullable = false, length = 30)
     private MemberRole role = MemberRole.FREE;
 
+    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Credential credential;
+
+    public void setCredential(Credential credential) {
+        this.credential = credential;
+    }
+
     public static Member createMember(String email, String picture) {
-        return new Member(email, picture, MemberRole.FREE);
+        Member member = new Member(email, picture, MemberRole.FREE, null);
+
+        Credential credential = Credential.create(member);
+
+        member.credential = credential;
+
+        return member;
     }
 
     public List<GrantedAuthority> getAuthorities() {

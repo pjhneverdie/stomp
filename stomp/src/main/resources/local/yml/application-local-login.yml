@@ -1,20 +1,7 @@
-server:
-  servlet:
-    session:
-      timeout: 48h
-      cookie:
-        secure: true
-        same-site: lax
-
 spring:
   config:
     import:
       - optional:file:/workspaces/codespaces-blank/stomp/local.env[.properties]
-  session:
-    redis:
-      flush-mode: immediate # save session whenever there are updates
-      repository-type: default # redisSessionRepository is the default implementation. however, if you want to be explicit about it, you can set the following property in your application
-      namespace: "spring:session"
       
   security:
     oauth2:

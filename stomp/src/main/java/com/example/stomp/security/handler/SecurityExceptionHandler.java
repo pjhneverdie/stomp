@@ -74,11 +74,13 @@ public class SecurityExceptionHandler
 
     private void logBriefError(String handlerName, Exception e) {
         Throwable rootCause = e;
+
         while (rootCause.getCause() != null) {
             rootCause = rootCause.getCause();
         }
 
         StackTraceElement firstLine = rootCause.getStackTrace()[0];
+        
         System.out.printf("[%s] 근본 원인: %s - %s (발생위치: %s:%d)%n",
                 handlerName,
                 rootCause.getClass().getSimpleName(),
