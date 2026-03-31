@@ -1,4 +1,4 @@
-package com.example.stomp.chat.websocket.handler;
+package com.example.stomp.chat.ws.stomp.handler;
 
 import java.nio.charset.StandardCharsets;
 

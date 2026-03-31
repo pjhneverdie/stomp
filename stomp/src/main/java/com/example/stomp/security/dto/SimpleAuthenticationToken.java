@@ -13,5 +13,5 @@ public class SimpleAuthenticationToken extends UsernamePasswordAuthenticationTok
 
     public record SimpleMemberDetails(long memberId, Collection<? extends GrantedAuthority> authorities) {
     }
-
+    
 }

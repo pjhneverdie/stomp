@@ -1,4 +1,4 @@
-package com.example.stomp.chat.websocket.interceptor;
+package com.example.stomp.chat.ws.stomp.interceptor;
 
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -6,7 +6,8 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
-
+import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
+import org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,8 +21,9 @@ public class ChatInterceptor implements ChannelInterceptor {
 
         switch (accessor.getCommand()) {
             case CONNECT:
+    
 
-
+                
                 break;
             case SUBSCRIBE:
 
@@ -29,13 +31,10 @@ public class ChatInterceptor implements ChannelInterceptor {
                 // 즉 유저 정보를 이미 StompHeaderAccessor가 다 가지고 있음.
                 String roomId = accessor.getDestination();
                 String memberId = accessor.getUser().getName();
+                
                 String currentSessionId = accessor.getSessionId();
+                
 
-                //chatPresenceRepository.getSessionId(memberId).ifPresent((old) -> {
-                //    // 예외를 발생 시킴. StompSubProtocolErrorHandler가 잡아서 에러 프레임 전송, 클라이언트에서 연결 거절.
-                //    // 이걸 쓰면 진짜 에러 프레임 나가고 
-                //    // 컨트롤러 내의 비즈니스 예외는 @MessageExceptionHandler 를 써서 메시지로 바꿔 보내야 함. !!
-                //});
 
                 break;
             case SEND:
