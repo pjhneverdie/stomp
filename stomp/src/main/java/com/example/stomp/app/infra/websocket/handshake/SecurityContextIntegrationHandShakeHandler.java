@@ -1,4 +1,4 @@
-package com.example.stomp.chat.ws.handshake;
+package com.example.stomp.app.infra.websocket.handshake;
 
 import java.security.Principal;
 import java.util.Map;
@@ -24,7 +24,7 @@ import com.example.stomp.chat.dto.SimpleWsPrincipal;
  * └─ Create session
  *
  */
-public class RedisHandShakeHandler extends DefaultHandshakeHandler {
+public class SecurityContextIntegrationHandShakeHandler extends DefaultHandshakeHandler {
 
     /**
      * When using WebSocket, you often need HTTP session attributes in the WebSocket
@@ -32,8 +32,10 @@ public class RedisHandShakeHandler extends DefaultHandshakeHandler {
      * Principal.
      *
      * If you are using Spring Security, the Authentication is already stored in the
-     * SecurityContext. In this case, you can simply override 'determineUser()' and
-     * wrap the Authentication in a Principal.
+     * SecurityContext Because handshake are processed with HTTP and we got filters.
+     * 
+     * In this case, you can simply override 'determineUser()' and wrap the
+     * Authentication in a Principal.
      * 
      * This Principal will be associated with the WebSocket session
      * and can later be accessed through StompHeaderAccessor.getUser().

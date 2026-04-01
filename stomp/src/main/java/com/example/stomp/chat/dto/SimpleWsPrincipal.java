@@ -6,9 +6,6 @@ import org.springframework.security.core.Authentication;
 
 import com.example.stomp.security.dto.SimpleAuthenticationToken;
 
-import lombok.RequiredArgsConstructor;
-
-@RequiredArgsConstructor
 public class SimpleWsPrincipal implements Principal {
 
     private final SimpleAuthenticationToken.SimpleMemberDetails simpleMemberDetails;

@@ -21,8 +21,8 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member extends BaseEntity {
 
     @Column(nullable = false, unique = true, length = 30)
@@ -43,11 +43,10 @@ public class Member extends BaseEntity {
     }
 
     public static Member createMember(String email, String picture) {
-        Member member = new Member(email, picture, MemberRole.FREE, null);
-
-        Credential credential = Credential.create(member);
-
-        member.credential = credential;
+        Member member = new Member();
+        member.email = email;
+        member.picture = picture;
+        member.credential = Credential.create(member);
 
         return member;
     }

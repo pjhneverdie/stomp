@@ -11,23 +11,24 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ChatRoom extends BaseEntity {
 
-    private static final int DEFAULT_MAX_CAPACITY = 2;
-
-    @Column(nullable = false, length = 30)
-    private String name;
-
-    @Column(nullable = false, unique = true, length = 36)
+    @Column(nullable = false, updatable = false, unique = true, length = 36)
     private String roomId;
 
-    @Column(nullable = false, updatable = false)
-    private int maxCapacity;
+    @Column(nullable = false, updatable = false, length = 30)
+    private String name;
 
-    public static ChatRoom create(String name, String roomId) {
-        return new ChatRoom(name, roomId, DEFAULT_MAX_CAPACITY);
+    @Column(nullable = false, updatable = false)
+    private int maxCapacity = 2;
+
+    public static ChatRoom create(String roomId, String name) {
+        ChatRoom chatRoom = new ChatRoom();
+        chatRoom.roomId = roomId;
+        chatRoom.name = name;
+        return chatRoom;
     }
 
 }

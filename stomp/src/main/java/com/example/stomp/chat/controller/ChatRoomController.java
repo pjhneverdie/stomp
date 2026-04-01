@@ -3,8 +3,8 @@ package com.example.stomp.chat.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.stomp.chat.domain.ChatRoom;
 import com.example.stomp.chat.dto.form.ChatRoomForm;
+import com.example.stomp.chat.service.ChatRoomService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,11 +18,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RequiredArgsConstructor
 public class ChatRoomController {
 
+    private ChatRoomService chatRoomService;
+
     @PostMapping("/create")
-    public String createChatRoom(@RequestBody ChatRoomForm.Create form) {
+    public String create(@RequestBody ChatRoomForm.Create form) {
         String roomId = UUID.randomUUID().toString();
 
-        ChatRoom chatRoom = ChatRoom.create(roomId, form.name());
+        chatRoomService.create(roomId, form.name());
 
         return roomId;
     }

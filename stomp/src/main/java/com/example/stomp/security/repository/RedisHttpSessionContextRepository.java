@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.springframework.boot.web.server.Cookie.SameSite;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -23,9 +24,11 @@ import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Component;
 
 import com.example.stomp.app.constant.SessionConstant;
+import com.example.stomp.app.event.SessionSwitchedEvent;
 import com.example.stomp.app.util.SecurityUtil;
 import com.example.stomp.member.dto.OidcMemberDetails;
 import com.example.stomp.security.dto.SimpleAuthenticationToken;
+import com.example.stomp.security.event.SessionEventPublisher;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,6 +40,7 @@ import lombok.RequiredArgsConstructor;
 public class RedisHttpSessionContextRepository implements SecurityContextRepository {
 
     private final RedisTemplate<String, Object> redis;
+    private final SessionEventPublisher eventPublisher;
 
     @Override
     public void saveContext(SecurityContext context, HttpServletRequest request, HttpServletResponse response) {
@@ -51,7 +55,10 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
                     Optional.ofNullable(
                             String.valueOf(((OidcMemberDetails) authentication.getPrincipal()).getMemberId()))
                             .ifPresent((memberId) -> {
-                                nullifyExisitingSession(memberId);
+                                getAndDeleteExisitingSession(memberId).ifPresent((oldSessionId) -> {
+                                    eventPublisher
+                                            .handleSessionSwitched(new SessionSwitchedEvent(memberId, oldSessionId));
+                                });
 
                                 Map<String, String> sessionMap = Map.of(
                                         SessionConstant.SESSION_MEMBER_ID_KEY, memberId,
@@ -65,10 +72,12 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
                 });
     }
 
-    private void nullifyExisitingSession(String memberId) {
-        Optional.ofNullable((String) redis.opsForValue()
-                .getAndDelete(SessionConstant.MEMBER_SESSION_INDEX_PREFIX + memberId)).ifPresent((sessionId) -> {
+    private Optional<String> getAndDeleteExisitingSession(String memberId) {
+        return Optional.ofNullable((String) redis.opsForValue()
+                .getAndDelete(SessionConstant.MEMBER_SESSION_INDEX_PREFIX + memberId))
+                .map(sessionId -> {
                     redis.delete(SessionConstant.SESSION_PREFIX + sessionId);
+                    return sessionId;
                 });
     }
 
