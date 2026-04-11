@@ -12,4 +12,4 @@ spring:
     compose:
       enabled: true
       lifecycle-management: start-and-stop
-      file: /workspaces/codespaces-blank/docker-compose-local.yml
+      file: /workspaces/stomp/docker/docker-compose-local.yml 

@@ -1,14 +1,17 @@
 package com.example.stomp.security.config;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 import com.example.stomp.app.constant.SessionConstant;
 import com.example.stomp.member.service.SimpleOidcUserService;
@@ -36,20 +39,16 @@ public class SecurityConfig {
 
         private static final String LOGOUT_PATH = "/logout";
 
-        @Bean
+        // @Bean
         @Profile({ "local", "test" })
         public WebSecurityCustomizer webSecurityCustomizerDebug() {
                 return (web) -> web.debug(true);
         }
 
         @Bean
-        @Profile("prod")
-        public WebSecurityCustomizer webSecurityCustomizerProd() {
-                return (web) -> web.debug(false);
-        }
-
-        @Bean
         SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                http.cors(Customizer.withDefaults());
+
                 http
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/").permitAll()

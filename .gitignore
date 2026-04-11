@@ -36,5 +36,5 @@ out/
 ### VS Code ###
 .vscode/
 
-**/local.env
-volumes
+/env
+/docker/volume

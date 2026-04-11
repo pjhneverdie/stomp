@@ -7,31 +7,33 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.messaging.StompSubProtocolHandler;
 
 import com.example.stomp.chat.dto.SimpleWsPrincipal;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ChatInterceptor implements ChannelInterceptor {
-    private final RedisTemplate<String, Object> redis;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
+        log.info(accessor.getCommand().toString());
+
         switch (accessor.getCommand()) {
             case CONNECT:
+                log.info("2.STOMP 프로토콜로 할게요~");
                 SimpleWsPrincipal user = (SimpleWsPrincipal) accessor.getUser();
-                
+
+                log.info(user.getSimpleMemberDetails().authorities().toString());
+
                 break;
             case SUBSCRIBE:
-
-                String roomId = accessor.getDestination();
-                String memberId = accessor.getUser().getName();
-
-                String currentSessionId = accessor.getSessionId();
 
                 break;
             case SEND:
@@ -44,4 +46,5 @@ public class ChatInterceptor implements ChannelInterceptor {
 
         return message;
     }
+
 }

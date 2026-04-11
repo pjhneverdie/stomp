@@ -8,9 +8,9 @@ services:
       MYSQL_DATABASE: localdb
       MYSQL_ROOT_PASSWORD: rootpass
     volumes:
-      - ./volumes/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
-      - ./volumes/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./volumes/mysql/data:/var/lib/mysql
+      - ./config/local/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+      - ./config/local/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./volume/local/mysql/data:/var/lib/mysql
 
   rabbitmq:
     container_name: local-rabbitmq
@@ -20,9 +20,9 @@ services:
       - "15672:15672" # Management Console
       - "61613:61613" # STOMP
     volumes:
-      - ./volumes/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
-      - ./volumes/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
-      - ./volumes/rabbitmq/data:/var/lib/rabbitmq
+      - ./config/local/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./config/local/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
+      - ./volume/local/rabbitmq/data:/var/lib/rabbitmq
 
   redis:
     container_name: local-redis
@@ -30,6 +30,6 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - ./volumes/redis/redis.conf:/usr/local/etc/redis/redis.conf
-      - ./volumes/redis/data:/data
+      - ./config/local/redis/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./volume/local/redis/data:/data
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]

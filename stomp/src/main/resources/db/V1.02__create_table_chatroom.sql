@@ -1,8 +1,0 @@
-CREATE TABLE IF NOT EXISTS chatroom (
-    id INT PRIMARY KEY AUTO_INCREMENT, 
-    room_id VARCHAR(36) NOT NULL UNIQUE, 
-    name VARCHAR(30) NOT NULL,
-    max_capacity INT NOT NULL DEFAULT 2,
-    created_at DATETIME NOT NULL,
-    updated_at DATETIME NOT NULL
-)

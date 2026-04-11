@@ -15,7 +15,7 @@ import com.example.stomp.app.event.SessionSwitchedEvent;
 
 import lombok.RequiredArgsConstructor;
 
-@Component
+// @Component
 @RequiredArgsConstructor
 public class SessionTerminateListener {
 

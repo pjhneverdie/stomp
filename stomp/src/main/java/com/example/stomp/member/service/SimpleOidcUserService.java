@@ -1,5 +1,7 @@
 package com.example.stomp.member.service;
 
+import java.util.UUID;
+
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -24,7 +26,8 @@ public class SimpleOidcUserService extends OidcUserService {
 
         Member member = memberRepository.findByEmail(oidcUser.getEmail())
                 .orElseGet(
-                        () -> memberRepository.save(Member.createMember(oidcUser.getEmail(), oidcUser.getPicture())));
+                        () -> memberRepository.save(Member.createMember(oidcUser.getEmail(), oidcUser.getPicture(),
+                                UUID.randomUUID().toString())));
 
         return new OidcMemberDetails(member.getId(), member.getAuthorities(), oidcUser.getIdToken(),
                 oidcUser.getUserInfo());

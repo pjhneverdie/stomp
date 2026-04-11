@@ -56,8 +56,8 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
                             String.valueOf(((OidcMemberDetails) authentication.getPrincipal()).getMemberId()))
                             .ifPresent((memberId) -> {
                                 getAndDeleteExisitingSession(memberId).ifPresent((oldSessionId) -> {
-                                    eventPublisher
-                                            .handleSessionSwitched(new SessionSwitchedEvent(memberId, oldSessionId));
+                                    // eventPublisher
+                                    // .handleSessionSwitched(new SessionSwitchedEvent(memberId, oldSessionId));
                                 });
 
                                 Map<String, String> sessionMap = Map.of(
@@ -102,6 +102,7 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
                 .maxAge(Duration.ofDays(1))
                 .sameSite(SameSite.LAX.toString())
                 .path(SessionConstant.COOKIE_PATH)
+                .domain("app.github.dev")
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());

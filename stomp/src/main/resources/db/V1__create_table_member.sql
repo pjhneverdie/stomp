@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS member (
     email VARCHAR(30) UNIQUE NOT NULL,
     picture VARCHAR(255) NOT NULL,
     role VARCHAR(30) NOT NULL,
+    personnel_code VARCHAR(36) UNIQUE NOT NULL,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL
 );

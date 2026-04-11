@@ -3,3 +3,8 @@ spring:
     active: local
   config:
     import: "optional:classpath:/${spring.profiles.active}/yml/application-${spring.profiles.active}.yml"
+
+logging:
+  level:
+    root: DEBUG
+    org.springframework.web: DEBUG
