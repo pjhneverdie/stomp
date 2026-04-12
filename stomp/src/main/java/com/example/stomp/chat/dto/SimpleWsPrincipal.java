@@ -7,11 +7,15 @@ import org.springframework.security.core.Authentication;
 import com.example.stomp.security.dto.SimpleAuthenticationToken;
 
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public class SimpleWsPrincipal implements Principal {
 
     private final SimpleAuthenticationToken.SimpleMemberDetails simpleMemberDetails;
+    
+    @Setter
+    private String roomId;
 
     public SimpleWsPrincipal(Authentication authentication) {
         this.simpleMemberDetails = (SimpleAuthenticationToken.SimpleMemberDetails) authentication.getPrincipal();

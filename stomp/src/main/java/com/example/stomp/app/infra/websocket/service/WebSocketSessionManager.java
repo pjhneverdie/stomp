@@ -1,4 +1,4 @@
-package com.example.stomp.app.infra.websocket.session;
+package com.example.stomp.app.infra.websocket.service;
 
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.messaging.MessageHeaders;
@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 
 // @Component
 @RequiredArgsConstructor
-public class SessionTerminateListener {
+public class WebSocketSessionManager {
 
     private final SimpUserRegistry userRegistry;
     private final SimpMessagingTemplate messagingTemplate;
