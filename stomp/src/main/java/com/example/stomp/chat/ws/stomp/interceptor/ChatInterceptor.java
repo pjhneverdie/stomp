@@ -32,10 +32,6 @@ public class ChatInterceptor implements ChannelInterceptor {
         }
 
         switch (accessor.getCommand()) {
-            case CONNECT:
-                // 솔직히 할 거 없음
-
-                break;
             case SUBSCRIBE:
                 // redis.opsForValue().set("chatroom:" + roomId + ":presence:" + memberId,
                 // sessionId);
