@@ -1,5 +1,6 @@
 package com.example.stomp.chat.service;
 
+import java.io.InvalidObjectException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,10 +9,15 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.example.stomp.app.constant.SessionConstant;
 import com.example.stomp.chat.domain.ChatRoom;
 import com.example.stomp.chat.repository.ChatRoomRepository;
+import com.example.stomp.security.dto.SimpleAuthenticationToken;
+import com.example.stomp.security.dto.SimpleAuthenticationToken.SimpleMemberDetails;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -24,26 +30,36 @@ public class ChatRoomService {
     private final ChatRoomRepository chatRoomRepository;
     private final ObjectMapper objectMapper;
 
-    private final static String CHATROOM_PRESENCE_PREFIX = "chatroom:presence:";
+    private final static String CHATROOM_KEY_PREFIX = "chatroom:";
+    private final static String CHATROOM_NAME_KEY = "name";
+    private final static String CHATROOM_PASS_CODES_KEY = "passCodes";
 
-    public String create(long memberId, String name) {
+    public String create(String sessionId, long memberId, String name, List<String> passCodes) {
         String roomId = UUID.randomUUID().toString();
-        // 혹시 이미 채팅에 참여중인 건 아닌지 확인
-        // 이걸 확인하려면
-        // 에초에 채팅방에 참여하면 http세션에다가 박아놔야함 참여중인 방을.
 
-        // 채팅방 생성
-        Map<String, String> chatRoomInfo = new HashMap<String, String>();
+        Map<String, String> chatRoom;
 
-        chatRoomInfo.put("max", "2");
-        chatRoomInfo.put("name", name);
+        try {
+            chatRoom = Map.of(
+                    CHATROOM_NAME_KEY, name,
+                    CHATROOM_PASS_CODES_KEY, objectMapper.writeValueAsString(passCodes));
+        } catch (JsonProcessingException e) {
+            throw new NullPointerException();
+        }
 
-        redis.opsForHash().putAll("chatroom:" + roomId, chatRoomInfo);
+        redis.opsForHash().putAll(CHATROOM_KEY_PREFIX + roomId, chatRoom);
 
-        redis.opsForHash();
+        // 시큐리티 콘텍스트 수정..해야하나? 고민해봐
+        // 해야지.
+
+        SimpleAuthenticationToken authentication = (SimpleAuthenticationToken) SecurityContextHolder.getContext()
+                .getAuthentication();
+
+        SimpleMemberDetails memberDetails = new SimpleMemberDetails(memberId, sessionId, name, authentication.getAuthorities(), roomId);
+
+        
 
         return roomId;
-
     }
 
     public void comeIn(String roomId, String memberId, String sessionId, String code) throws Exception {
@@ -63,6 +79,12 @@ public class ChatRoomService {
 
                 } else {
                     redis.opsForValue().set("chatroom:" + roomId + ":presence:" + memberId, sessionId);
+
+                    // save that he has a chat for preventing him from reckless creation
+                    // once the chat ends, it should be replaced as null
+                    redis.opsForHash().put(SessionConstant.SESSION_KEY_PREFIX + sessionId,
+                            SessionConstant.SESSION_ROOM_ID_KEY,
+                            roomId);
                 }
             }
         } else {

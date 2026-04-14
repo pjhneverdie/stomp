@@ -11,7 +11,8 @@ public class SimpleAuthenticationToken extends UsernamePasswordAuthenticationTok
         super(principal, null, principal.authorities());
     }
 
-    public record SimpleMemberDetails(long memberId, Collection<? extends GrantedAuthority> authorities) {
+    public record SimpleMemberDetails(long memberId, String sessionId, String code,
+            Collection<? extends GrantedAuthority> authorities, String roomId) {
     }
-    
+
 }

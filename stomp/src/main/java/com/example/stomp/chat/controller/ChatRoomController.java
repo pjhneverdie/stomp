@@ -25,7 +25,7 @@ public class ChatRoomController {
     @PostMapping("/create")
     public String create(@RequestBody ChatRoomForm.Create form,
             @AuthenticationPrincipal SimpleMemberDetails memberDetails) {
-        return chatRoomService.create(memberDetails.memberId(), form.name());
+        return chatRoomService.create(memberDetails.sessionId(), memberDetails.memberId(), form.name(), memberDetails.);
     }
 
 }

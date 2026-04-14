@@ -7,20 +7,21 @@ import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 
+import com.example.stomp.member.domain.Member;
+
 import lombok.Getter;
 
 @Getter
 public class OidcMemberDetails extends DefaultOidcUser {
 
-    private final long memberId;
+    private final Member member;
 
     public OidcMemberDetails(
-            long memberId,
-            Collection<? extends GrantedAuthority> authorities,
+            Member member,
             OidcIdToken idToken,
             OidcUserInfo userInfo) {
-        super(authorities, idToken, userInfo);
-        this.memberId = memberId;
+        super(member.getAuthorities(), idToken, userInfo);
+        this.member = member;
     }
 
 }

@@ -20,12 +20,14 @@ import org.springframework.security.core.context.DeferredSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.HttpRequestResponseHolder;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Component;
 
 import com.example.stomp.app.constant.SessionConstant;
 import com.example.stomp.app.event.SessionSwitchedEvent;
 import com.example.stomp.app.util.SecurityUtil;
+import com.example.stomp.member.domain.Member;
 import com.example.stomp.member.dto.OidcMemberDetails;
 import com.example.stomp.security.dto.SimpleAuthenticationToken;
 import com.example.stomp.security.event.SessionEventPublisher;
@@ -52,37 +54,39 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
                 .filter(Authentication::isAuthenticated)
                 .filter(authentication -> !(authentication instanceof AnonymousAuthenticationToken))
                 .ifPresent(authentication -> {
-                    Optional.ofNullable(
-                            String.valueOf(((OidcMemberDetails) authentication.getPrincipal()).getMemberId()))
-                            .ifPresent((memberId) -> {
-                                getAndDeleteExisitingSession(memberId).ifPresent((oldSessionId) -> {
-                                    // eventPublisher
-                                    // .handleSessionSwitched(new SessionSwitchedEvent(memberId, oldSessionId));
-                                });
+                    Member member = ((OidcMemberDetails) authentication.getPrincipal()).getMember();
+                    String stringMemberId = member.getId().toString();
 
-                                Map<String, String> sessionMap = Map.of(
-                                        SessionConstant.SESSION_MEMBER_ID_KEY, memberId,
-                                        SessionConstant.SESSION_AUHTORITIES_KEY,
-                                        SecurityUtil.authoritiesToString(authentication.getAuthorities()));
+                    getAndDeleteExisitingSession(member.getId().toString()).ifPresent((oldSessionId) -> {
+                        // publish event notifying session switched
+                    });
 
-                                saveSession(sessionId, sessionMap);
-                                createIndex(sessionId, memberId);
-                                setCookie(sessionId, response);
-                            });
+                    Map<String, String> sessionMap = Map.of(
+                            SessionConstant.SESSION_MEMBER_ID_KEY, stringMemberId,
+                            SessionConstant.SESSION_SESSION_ID_KEY, sessionId,
+                            SessionConstant.SESSION_MEMBER_CODE_KEY, member.getCode(),
+                            SessionConstant.SESSION_AUHTORITIES_KEY, SecurityUtil.authoritiesToString(
+                                    authentication.getAuthorities()));
+
+                    saveSession(sessionId, sessionMap);
+                    createIndex(sessionId, stringMemberId);
+                    setCookie(sessionId, response);
                 });
+
+        // 다시 시큐리티 콘텍스트 저장
     }
 
     private Optional<String> getAndDeleteExisitingSession(String memberId) {
         return Optional.ofNullable((String) redis.opsForValue()
                 .getAndDelete(SessionConstant.MEMBER_SESSION_INDEX_PREFIX + memberId))
                 .map(sessionId -> {
-                    redis.delete(SessionConstant.SESSION_PREFIX + sessionId);
+                    redis.delete(SessionConstant.SESSION_KEY_PREFIX + sessionId);
                     return sessionId;
                 });
     }
 
     private void saveSession(String sessionId, Map<String, String> sessionMap) {
-        String key = SessionConstant.SESSION_PREFIX + sessionId;
+        String key = SessionConstant.SESSION_KEY_PREFIX + sessionId;
 
         redis.opsForHash().putAll(key, sessionMap);
         redis.expire(key, 1, TimeUnit.DAYS);
@@ -112,7 +116,7 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
     public boolean containsContext(HttpServletRequest request) {
         return Optional.ofNullable(getCookie(request))
                 .map(Cookie::getValue)
-                .map(sessionId -> SessionConstant.SESSION_PREFIX + sessionId)
+                .map(sessionId -> SessionConstant.SESSION_KEY_PREFIX + sessionId)
                 .map(redisKey -> Boolean.TRUE.equals(redis.hasKey(redisKey)))
                 .orElse(false);
     }
@@ -151,27 +155,31 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
     }
 
     private Authentication createAuthentication(Cookie cookie) {
-        return Optional.ofNullable(cookie)
-                .map(Cookie::getValue)
-                .map(sessionId -> redis.opsForHash().entries(SessionConstant.SESSION_PREFIX + sessionId))
-                .filter(map -> !map.isEmpty())
-                .map(map -> {
-                    String auths = (String) map.get(SessionConstant.SESSION_AUHTORITIES_KEY);
-                    String memberId = (String) map.get(SessionConstant.SESSION_MEMBER_ID_KEY);
+        Map<Object, Object> sessionMap = redis.opsForHash()
+                .entries(SessionConstant.SESSION_KEY_PREFIX + cookie.getValue());
 
-                    if (auths == null || memberId == null)
-                        return null;
+        if (sessionMap.isEmpty())
+            return null;
 
-                    return new SimpleAuthenticationToken(
-                            new SimpleAuthenticationToken.SimpleMemberDetails(
-                                    Long.parseLong(memberId),
-                                    SecurityUtil.stringToAuthorities(auths)));
-                })
-                .orElse(null);
+        String memberId = (String) sessionMap.get(SessionConstant.SESSION_MEMBER_ID_KEY);
+        String sessionId = (String) sessionMap.get(SessionConstant.SESSION_SESSION_ID_KEY);
+        String code = (String) sessionMap.get(SessionConstant.SESSION_MEMBER_CODE_KEY);
+        String auths = (String) sessionMap.get(SessionConstant.SESSION_AUHTORITIES_KEY);
+        String roomId = (String) sessionMap.get(SessionConstant.SESSION_ROOM_ID_KEY);
+
+        if (sessionId == null || memberId == null || auths == null)
+            return null;
+
+        return new SimpleAuthenticationToken(
+                new SimpleAuthenticationToken.SimpleMemberDetails(
+                        Long.parseLong(memberId),
+                        sessionId,
+                        code,
+                        SecurityUtil.stringToAuthorities(auths), roomId));
     }
 
     private void extendExpiry(String sessionId, long memberId) {
-        redis.expire(SessionConstant.SESSION_PREFIX + sessionId, 1, TimeUnit.DAYS);
+        redis.expire(SessionConstant.SESSION_KEY_PREFIX + sessionId, 1, TimeUnit.DAYS);
         redis.expire(SessionConstant.MEMBER_SESSION_INDEX_PREFIX + memberId, 1, TimeUnit.DAYS);
     }
 

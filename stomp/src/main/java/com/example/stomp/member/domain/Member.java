@@ -36,7 +36,7 @@ public class Member extends BaseEntity {
     private MemberRole role = MemberRole.FREE;
 
     @Column(nullable = false, unique = true, length = 36)
-    private String personnelCode;
+    private String code;
 
     @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private Credential credential;
@@ -45,11 +45,11 @@ public class Member extends BaseEntity {
         this.credential = credential;
     }
 
-    public static Member createMember(String email, String picture, String personnelCode) {
+    public static Member createMember(String email, String picture, String code) {
         Member member = new Member();
         member.email = email;
         member.picture = picture;
-        member.personnelCode = personnelCode;
+        member.code = code;
         member.credential = Credential.create(member);
 
         return member;

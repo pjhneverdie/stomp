@@ -24,7 +24,7 @@ public class RedisHttpSessionLogoutHandler implements LogoutHandler {
         HttpSession session = request.getSession(false);
 
         if (session != null) {
-            redis.delete(SessionConstant.SESSION_PREFIX + session.getId());
+            redis.delete(SessionConstant.SESSION_KEY_PREFIX + session.getId());
         }
 
         if (authentication != null) {

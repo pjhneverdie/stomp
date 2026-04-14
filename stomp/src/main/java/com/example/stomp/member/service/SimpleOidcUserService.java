@@ -18,19 +18,19 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SimpleOidcUserService extends OidcUserService {
 
-    private final MemberRepository memberRepository;
+        private final MemberRepository memberRepository;
 
-    @Override
-    public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
-        OidcUser oidcUser = super.loadUser(userRequest);
+        @Override
+        public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
+                OidcUser oidcUser = super.loadUser(userRequest);
 
-        Member member = memberRepository.findByEmail(oidcUser.getEmail())
-                .orElseGet(
-                        () -> memberRepository.save(Member.createMember(oidcUser.getEmail(), oidcUser.getPicture(),
-                                UUID.randomUUID().toString())));
+                Member member = memberRepository.findByEmail(oidcUser.getEmail())
+                                .orElseGet(() -> memberRepository.save(Member.createMember(oidcUser.getEmail(),
+                                                oidcUser.getPicture(),
+                                                UUID.randomUUID().toString())));
 
-        return new OidcMemberDetails(member.getId(), member.getAuthorities(), oidcUser.getIdToken(),
-                oidcUser.getUserInfo());
-    }
+                return new OidcMemberDetails(member, oidcUser.getIdToken(),
+                                oidcUser.getUserInfo());
+        }
 
 }
