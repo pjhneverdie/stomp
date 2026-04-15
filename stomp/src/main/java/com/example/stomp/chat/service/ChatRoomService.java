@@ -34,39 +34,21 @@ public class ChatRoomService {
     private final static String CHATROOM_NAME_KEY = "name";
     private final static String CHATROOM_PASS_CODES_KEY = "passCodes";
 
-    public String create(String sessionId, long memberId, String name, List<String> passCodes) {
-        String roomId = UUID.randomUUID().toString();
+    public boolean isJoinable(String roomId, String code) {
+        return chatRoomRepository.findById(roomId)
+                .map(chatRoom -> chatRoom.isJoinable(code))
+                .orElse(false);
+    }
 
-        Map<String, String> chatRoom;
-
-        try {
-            chatRoom = Map.of(
-                    CHATROOM_NAME_KEY, name,
-                    CHATROOM_PASS_CODES_KEY, objectMapper.writeValueAsString(passCodes));
-        } catch (JsonProcessingException e) {
-            throw new NullPointerException();
-        }
-
-        redis.opsForHash().putAll(CHATROOM_KEY_PREFIX + roomId, chatRoom);
-
-        // 시큐리티 콘텍스트 수정..해야하나? 고민해봐
-        // 해야지.
-
-        SimpleAuthenticationToken authentication = (SimpleAuthenticationToken) SecurityContextHolder.getContext()
-                .getAuthentication();
-
-        SimpleMemberDetails memberDetails = new SimpleMemberDetails(memberId, sessionId, name, authentication.getAuthorities(), roomId);
-
-        
-
-        return roomId;
+    public String create(String name, List<String> passCodes) {
+        return chatRoomRepository.save(ChatRoom.create(UUID.randomUUID().toString(), name, passCodes)).getId();
     }
 
     public void comeIn(String roomId, String memberId, String sessionId, String code) throws Exception {
-        Map<Object, Object> chatroom = redis.opsForHash().entries("chatroom:" + roomId);
+        Map<Object, Object> chatroom = redis.opsForHash().entries(CHATROOM_KEY_PREFIX + roomId);
 
         if (chatroom != null) {
-            String codes = (String) chatroom.get("codes");
+            String codes = (String) chatroom.get(CHATROOM_PASS_CODES_KEY);
             List<String> codeList = objectMapper.readValue(codes, new TypeReference<List<String>>() {
             });
 

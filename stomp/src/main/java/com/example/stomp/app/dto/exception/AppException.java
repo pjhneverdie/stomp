@@ -1,13 +1,12 @@
 package com.example.stomp.app.dto.exception;
 
-import org.springframework.http.HttpStatus;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-public abstract class AppException extends RuntimeException {
+@Getter
+@RequiredArgsConstructor
+public class AppException extends RuntimeException {
 
-    public abstract HttpStatus getHttpStatus();
-
-    protected AppException(String message) {
-        super(message);
-    }
+    private final ExceptionSchema eSchema;
 
 }

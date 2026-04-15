@@ -9,7 +9,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 
-import com.example.stomp.chat.dto.SimpleWsPrincipal;
+import com.example.stomp.app.infra.websocket.WsPrincipal;
+import com.example.stomp.app.util.SecurityUtil;
+import com.example.stomp.security.dto.HttpSessionMemberDetails;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,9 +37,7 @@ public class SecurityContextIntegrationHandShakeHandler extends DefaultHandshake
     @Override
     protected Principal determineUser(ServerHttpRequest request, WebSocketHandler wsHandler,
             Map<String, Object> attributes) {
-
-        log.info("1. 접속했다 게이들아");
-        return new SimpleWsPrincipal(SecurityContextHolder.getContext().getAuthentication());
+        return new WsPrincipal(SecurityUtil.getPrincipal());
     }
 
 }

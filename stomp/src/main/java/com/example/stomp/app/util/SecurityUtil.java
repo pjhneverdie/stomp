@@ -7,10 +7,14 @@ import java.util.stream.Collectors;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import com.example.stomp.security.dto.HttpSessionMemberDetails;
 
 public final class SecurityUtil {
 
-    private SecurityUtil() {}
+    private SecurityUtil() {
+    }
 
     public static String authoritiesToString(Collection<? extends GrantedAuthority> authorities) {
         return authorities.stream()
@@ -22,6 +26,10 @@ public final class SecurityUtil {
         return Arrays.stream(stringAuthorities.split(","))
                 .map(SimpleGrantedAuthority::new)
                 .toList();
+    }
+
+    public static HttpSessionMemberDetails getPrincipal() {
+        return (HttpSessionMemberDetails) SecurityContextHolder.getContext().getAuthentication();
     }
 
 }

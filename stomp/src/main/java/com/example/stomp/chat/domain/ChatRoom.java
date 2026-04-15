@@ -1,34 +1,42 @@
 package com.example.stomp.chat.domain;
 
-import com.example.stomp.app.domain.BaseEntity;
+import java.util.List;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.redis.core.RedisHash;
+
+import com.example.stomp.chat.enum_type.ChatStatus;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Entity
-@Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ChatRoom extends BaseEntity {
+@Getter
+@RedisHash
+public class ChatRoom {
 
-    @Column(nullable = false, updatable = false, unique = true, length = 36)
-    private String roomId;
+    @Id
+    private String id;
 
-    @Column(nullable = false, updatable = false, length = 30)
     private String name;
 
-    @Column(nullable = false, updatable = false)
-    private int maxCapacity = 2;
+    private List<String> passCodes;
 
-    public static ChatRoom create(String roomId, String name) {
-        ChatRoom chatRoom = new ChatRoom();
-        chatRoom.roomId = roomId;
-        chatRoom.name = name;
-        return chatRoom;
+    private ChatStatus status;
+
+    public static ChatRoom create(String id, String name, List<String> passCodes) {
+        return new ChatRoom(
+                id,
+                name,
+                passCodes,
+                ChatStatus.STEP_APPEALING);
+    }
+
+    public boolean isJoinable(String passCode) {
+        return this.passCodes.contains(passCode);
     }
 
 }
