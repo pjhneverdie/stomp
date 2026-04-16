@@ -4,6 +4,7 @@ import java.io.InvalidObjectException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import com.example.stomp.app.constant.SessionConstant;
 import com.example.stomp.chat.domain.ChatRoom;
+import com.example.stomp.chat.enum_type.Presence;
 import com.example.stomp.chat.repository.ChatRoomRepository;
 import com.example.stomp.security.dto.SimpleAuthenticationToken;
 import com.example.stomp.security.dto.SimpleAuthenticationToken.SimpleMemberDetails;
@@ -26,18 +28,50 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class ChatRoomService {
+
     private final RedisTemplate<String, Object> redis;
     private final ChatRoomRepository chatRoomRepository;
-    private final ObjectMapper objectMapper;
 
-    private final static String CHATROOM_KEY_PREFIX = "chatroom:";
-    private final static String CHATROOM_NAME_KEY = "name";
-    private final static String CHATROOM_PASS_CODES_KEY = "passCodes";
+    public static final String CHATROOM_PRESENCE_KEY_PREFIX = "chatRoom:%s:presence:%s";
 
-    public boolean isJoinable(String roomId, String code) {
+    public boolean isPassableCode(String roomId, String code) {
         return chatRoomRepository.findById(roomId)
-                .map(chatRoom -> chatRoom.isJoinable(code))
+                .map(chatRoom -> chatRoom.isPassableCode(code))
                 .orElse(false);
+    }
+
+    public boolean isMultiSessionAccess(String memberId, String roomId) {
+        /**
+         * @formatter:off
+         * Please update the value of presence as DISCONNECTED whenever disconnection happens so that we can recognize
+         * their multiple-session-joining even they already have exisiting connection.
+         * @formatter:on
+         */
+
+        /**
+         * @formatter:off
+         * We can recognize multiple session doing like below, based on the promise updates as DISCONNECTED whenever disconnection happens
+         * @formatter:on
+         */
+        Optional.ofNullable((String) redis.opsForValue()
+                .get(String.format(CHATROOM_PRESENCE_KEY_PREFIX, roomId, memberId))).ifPresentOrElse(
+                        (stringPresence) -> {
+                            switch (Presence.valueOf(stringPresence)) {
+                                // It says they already have existing connection.
+                                case CONNECTED:
+
+                                    break;
+
+                                // It says this is reconnection = they used to, but not now.
+                                case DISCONNECTED:
+                                    break;
+                            }
+                        },
+                        () -> {
+                            // It says this is innocent connection.
+
+                        });
+
     }
 
     public String create(String name, List<String> passCodes) {
@@ -45,32 +79,43 @@ public class ChatRoomService {
     }
 
     public void comeIn(String roomId, String memberId, String sessionId, String code) throws Exception {
-        Map<Object, Object> chatroom = redis.opsForHash().entries(CHATROOM_KEY_PREFIX + roomId);
+        chatRoomRepository.findById(roomId).ifPresentOrElse(
+                (chatRoom) -> {
 
-        if (chatroom != null) {
-            String codes = (String) chatroom.get(CHATROOM_PASS_CODES_KEY);
-            List<String> codeList = objectMapper.readValue(codes, new TypeReference<List<String>>() {
-            });
+                },
+                () -> {
+                });
 
-            if (codeList.contains(code)) {
+        // Map<Object, Object> chatroom = redis.opsForHash().entries(CHATROOM_KEY_PREFIX
+        // + roomId);
 
-                String sessionId2 = (String) redis.opsForValue().get("chatroom:" + roomId + ":presence:" + memberId);
+        // if (chatroom != null) {
+        // String codes = (String) chatroom.get(CHATROOM_PASS_CODES_KEY);
+        // List<String> codeList = objectMapper.readValue(codes, new
+        // TypeReference<List<String>>() {
+        // });
 
-                if (sessionId2 != null) {
-                    // 다중 창 접속임 나중에 처리
+        // if (codeList.contains(code)) {
 
-                } else {
-                    redis.opsForValue().set("chatroom:" + roomId + ":presence:" + memberId, sessionId);
+        // String sessionId2 = (String) redis.opsForValue().get("chatroom:" + roomId +
+        // ":presence:" + memberId);
 
-                    // save that he has a chat for preventing him from reckless creation
-                    // once the chat ends, it should be replaced as null
-                    redis.opsForHash().put(SessionConstant.SESSION_KEY_PREFIX + sessionId,
-                            SessionConstant.SESSION_ROOM_ID_KEY,
-                            roomId);
-                }
-            }
-        } else {
-        }
+        // if (sessionId2 != null) {
+        // // 다중 창 접속임 나중에 처리
+
+        // } else {
+        // redis.opsForValue().set("chatroom:" + roomId + ":presence:" + memberId,
+        // sessionId);
+
+        // // save that he has a chat for preventing him from reckless creation
+        // // once the chat ends, it should be replaced as null
+        // redis.opsForHash().put(SessionConstant.SESSION_KEY_PREFIX + sessionId,
+        // SessionConstant.SESSION_ROOM_ID_KEY,
+        // roomId);
+        // }
+        // }
+        // } else {
+        // }
 
     }
 

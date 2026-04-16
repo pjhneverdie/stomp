@@ -7,6 +7,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AppException extends RuntimeException {
 
-    private final ExceptionSchema eSchema;
+    private final ExceptionInfo eSchema;
 
 }

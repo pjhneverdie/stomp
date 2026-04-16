@@ -1,5 +1,7 @@
 package com.example.stomp.chat.ws.stomp.interceptor;
 
+import java.util.Optional;
+
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -12,7 +14,7 @@ import org.springframework.web.socket.messaging.StompSubProtocolHandler;
 import com.example.stomp.app.dto.exception.AppException;
 import com.example.stomp.app.infra.websocket.WsPrincipal;
 import com.example.stomp.app.util.StompHeaderUtil;
-import com.example.stomp.chat.dto.exception.ChatExceptionSchema;
+import com.example.stomp.chat.dto.exception.ChatExceptions;
 import com.example.stomp.chat.service.ChatRoomService;
 
 import lombok.RequiredArgsConstructor;
@@ -38,28 +40,39 @@ public class ChatInterceptor implements ChannelInterceptor {
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
-        // This is just a heartbeat
+        // This is just a heartbeat.
         if (accessor.getCommand() == null) {
             return message;
         }
 
         switch (accessor.getCommand()) {
-            /** @formatter:off
+            /**
+             * @formatter:off
              * On CONNECT step, we have to check if the user can join or not.
-             * We just need the two for making it happen, the id of the chatroom and the unique code of the user.
-             * Search the chatroom with roomId and check if it contains the user's code. You can earn the roomId
-             * from the header of STOMP CONNECT message. And we already got memberCode cloned from HttpSession during handshaking. 
+             * 1. validate if the user has valid pass code of the room.
+             * 2. prevent user from trying to join the room by opening an extra tab with already joined.
              * @formatter:on
              */
+            case CONNECT: {
+                WsPrincipal wsPrincipal = StompHeaderUtil.getPrincipal(accessor);
 
-            case CONNECT:
-                String roomId = String.valueOf(accessor.getHeader(ROOM_ID_HEADER_KEY));
-                String memberCode = StompHeaderUtil.getPrincipal(accessor).getMemberCode();
-
-                if (!chatRoomService.isJoinable(roomId, memberCode)) {
-                    throw new AppException(ChatExceptionSchema.UNMATCHABLE_MEMBER_CODE);
+                // 1.
+                if (!chatRoomService.isPassableCode(String.valueOf(accessor.getHeader(ROOM_ID_HEADER_KEY)),
+                        wsPrincipal.getMemberCode())) {
+                    throw new AppException(ChatExceptions.UNMATCHABLE_MEMBER_CODE);
                 }
+
+                // 2.
+                if (chatRoomService.isMultiSessionAccess(String.valueOf(wsPrincipal.getMemberId()),
+                        wsPrincipal.getRoomId())) {
+                    throw new AppException(ChatExceptions.MULTIPLE_WS_SESSION_DETECTED);
+                }
+            }
+
             case SUBSCRIBE:
+                WsPrincipal wsPrincipal = StompHeaderUtil.getPrincipal(accessor);
+
+                // if
                 // redis.opsForValue().set("chatroom:" + roomId + ":presence:" + memberId,
                 // sessionId);
                 // 이렇게 저장할건데 만약 sessionId 없으면 접속 시키고

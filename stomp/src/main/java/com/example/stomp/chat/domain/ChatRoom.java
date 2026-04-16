@@ -35,7 +35,7 @@ public class ChatRoom {
                 ChatStatus.STEP_APPEALING);
     }
 
-    public boolean isJoinable(String passCode) {
+    public boolean isPassableCode(String passCode) {
         return this.passCodes.contains(passCode);
     }
 
