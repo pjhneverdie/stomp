@@ -26,9 +26,10 @@ services:
 
   redis:
     container_name: local-redis
-    image: redis:8.6
+    image: redis/redis-stack:7.4.0-v8-x86_64
     ports:
-      - "6379:6379"
+      - "6379:6379" 
+      - "8001:8001" # GUI
     volumes:
       - ./config/local/redis/redis.conf:/usr/local/etc/redis/redis.conf
       - ./volume/local/redis/data:/data

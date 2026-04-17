@@ -12,16 +12,20 @@ import java.util.stream.Collectors;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 import com.example.stomp.app.constant.SessionConstant;
-import com.example.stomp.chat.domain.ChatRoom;
-import com.example.stomp.chat.enum_type.Presence;
+import com.example.stomp.app.dto.exception.AppException;
+import com.example.stomp.chat.document.ChatRoom;
+import com.example.stomp.chat.document.enum_type.NetworkStatus;
+import com.example.stomp.chat.dto.exception.ChatExceptions;
 import com.example.stomp.chat.repository.ChatRoomRepository;
 import com.example.stomp.security.dto.SimpleAuthenticationToken;
 import com.example.stomp.security.dto.SimpleAuthenticationToken.SimpleMemberDetails;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.redis.om.spring.search.stream.EntityStream;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,53 +34,22 @@ import lombok.RequiredArgsConstructor;
 public class ChatRoomService {
 
     private final RedisTemplate<String, Object> redis;
+    private final EntityStream entityStream;
     private final ChatRoomRepository chatRoomRepository;
 
     public static final String CHATROOM_PRESENCE_KEY_PREFIX = "chatRoom:%s:presence:%s";
 
-    public boolean isPassableCode(String roomId, String code) {
-        return chatRoomRepository.findById(roomId)
-                .map(chatRoom -> chatRoom.isPassableCode(code))
-                .orElse(false);
-    }
-
-    public boolean isMultiSessionAccess(String memberId, String roomId) {
-        /**
-         * @formatter:off
-         * Please update the value of presence as DISCONNECTED whenever disconnection happens so that we can recognize
-         * their multiple-session-joining even they already have exisiting connection.
-         * @formatter:on
-         */
-
-        /**
-         * @formatter:off
-         * We can recognize multiple session doing like below, based on the promise updates as DISCONNECTED whenever disconnection happens
-         * @formatter:on
-         */
-        Optional.ofNullable((String) redis.opsForValue()
-                .get(String.format(CHATROOM_PRESENCE_KEY_PREFIX, roomId, memberId))).ifPresentOrElse(
-                        (stringPresence) -> {
-                            switch (Presence.valueOf(stringPresence)) {
-                                // It says they already have existing connection.
-                                case CONNECTED:
-
-                                    break;
-
-                                // It says this is reconnection = they used to, but not now.
-                                case DISCONNECTED:
-                                    break;
-                            }
-                        },
-                        () -> {
-                            // It says this is innocent connection.
-
-                        });
-
-    }
-
     public String create(String name, List<String> passCodes) {
         return chatRoomRepository.save(ChatRoom.create(UUID.randomUUID().toString(), name, passCodes)).getId();
     }
+
+    public ChatRoom validateIfChatRoomExists(String roomId) {
+        return chatRoomRepository.findById(roomId).orElseGet(() -> {
+            throw new AppException(ChatExceptions.UNEXISTS_CHAT);
+        });
+    }
+
+    
 
     public void comeIn(String roomId, String memberId, String sessionId, String code) throws Exception {
         chatRoomRepository.findById(roomId).ifPresentOrElse(

@@ -14,6 +14,8 @@ import org.springframework.web.socket.messaging.StompSubProtocolHandler;
 import com.example.stomp.app.dto.exception.AppException;
 import com.example.stomp.app.infra.websocket.WsPrincipal;
 import com.example.stomp.app.util.StompHeaderUtil;
+import com.example.stomp.chat.document.ChatRoom;
+import com.example.stomp.chat.dto.JoinType;
 import com.example.stomp.chat.dto.exception.ChatExceptions;
 import com.example.stomp.chat.service.ChatRoomService;
 
@@ -39,6 +41,7 @@ public class ChatInterceptor implements ChannelInterceptor {
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+        WsPrincipal wsPrincipal = StompHeaderUtil.getPrincipal(accessor);
 
         // This is just a heartbeat.
         if (accessor.getCommand() == null) {
@@ -48,30 +51,32 @@ public class ChatInterceptor implements ChannelInterceptor {
         switch (accessor.getCommand()) {
             /**
              * @formatter:off
-             * On CONNECT step, we have to check if the user can join or not.
-             * 1. validate if the user has valid pass code of the room.
-             * 2. prevent user from trying to join the room by opening an extra tab with already joined.
+             * 
+             * On CONNECT step, we have to validate if the user can join or not.
+             * 
+             * 1. validate if the user has valid passcode of the room.
+             * 2. validate if user tries to join the room with the same account but multiple session.
+             * 
              * @formatter:on
              */
             case CONNECT: {
-                WsPrincipal wsPrincipal = StompHeaderUtil.getPrincipal(accessor);
+                ChatRoom chatRoom = chatRoomService.validateIfChatRoomExists(ROOM_ID_HEADER_KEY);
 
                 // 1.
-                if (!chatRoomService.isPassableCode(String.valueOf(accessor.getHeader(ROOM_ID_HEADER_KEY)),
-                        wsPrincipal.getMemberCode())) {
-                    throw new AppException(ChatExceptions.UNMATCHABLE_MEMBER_CODE);
-                }
+                chatRoom.validatePassCode(wsPrincipal.getMemberCode());
 
                 // 2.
-                if (chatRoomService.isMultiSessionAccess(String.valueOf(wsPrincipal.getMemberId()),
-                        wsPrincipal.getRoomId())) {
-                    throw new AppException(ChatExceptions.MULTIPLE_WS_SESSION_DETECTED);
+                JoinType joinType = chatRoom.validateSession(wsPrincipal.getRoomId());
+
+                if (joinType == JoinType.RECONNECTION) {
+
                 }
+
+                // 3. Save the id of the room user is going to join into WSsession.
+                wsPrincipal.setRoomId(ROOM_ID_HEADER_KEY);
             }
 
             case SUBSCRIBE:
-                WsPrincipal wsPrincipal = StompHeaderUtil.getPrincipal(accessor);
-
                 // if
                 // redis.opsForValue().set("chatroom:" + roomId + ":presence:" + memberId,
                 // sessionId);
