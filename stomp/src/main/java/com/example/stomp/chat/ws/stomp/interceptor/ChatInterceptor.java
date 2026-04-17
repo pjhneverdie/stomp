@@ -30,6 +30,18 @@ import lombok.extern.slf4j.Slf4j;
 // 4. 그리고 구독 단계에서 웹소켓 세션에 roomId를 넣어서 웹소켓 세션을 완성 시켜.
 // 5. 문제없이 SessionSubscribeEvent 뜨면 그때서야 redis 세션 Map에 진짜로 참여중인 채팅방 업데이트쳐.
 
+// disconnected 이벤트 뜨면
+
+// 1. NetworkStatus disconnected로 바꿔, 시간이랑 같이.
+
+// 2. roomId랑 memberId 조합해서 KEY 만들고 10분 TTL STRING 하나 조져놔.
+
+// 3. 재접속하면 TTL 없애고 지워.
+
+// 4. 10분 지나서 삭제되면 이벤트로 KEY받아서 상대도 DISCONNECT인지 확인해.
+
+// 5. 만약 상대도 DISCONNECT 된지 10분 지나면 채팅이랑 이런 거 다 삭제하고 http 세션도 수정해.
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -49,47 +61,16 @@ public class ChatInterceptor implements ChannelInterceptor {
         }
 
         switch (accessor.getCommand()) {
-            /**
-             * @formatter:off
-             * 
-             * On CONNECT step, we have to validate if the user can join or not.
-             * 
-             * 1. validate if the user has valid passcode of the room.
-             * 2. validate if user tries to join the room with the same account but multiple session.
-             * 
-             * @formatter:on
-             */
             case CONNECT: {
-                ChatRoom chatRoom = chatRoomService.validateIfChatRoomExists(ROOM_ID_HEADER_KEY);
+                // 1. See If chatroom exists.
+                ChatRoom chatRoom = chatRoomService.orElseThrow(ROOM_ID_HEADER_KEY);
 
-                // 1.
+                // 2. If it is, validate if they have a right to join.
                 chatRoom.validatePassCode(wsPrincipal.getMemberCode());
-
-                // 2.
-                JoinType joinType = chatRoom.validateSession(wsPrincipal.getRoomId());
-
-                if (joinType == JoinType.RECONNECTION) {
-
-                }
-
-                // 3. Save the id of the room user is going to join into WSsession.
-                wsPrincipal.setRoomId(ROOM_ID_HEADER_KEY);
             }
 
             case SUBSCRIBE:
-                // if
-                // redis.opsForValue().set("chatroom:" + roomId + ":presence:" + memberId,
-                // sessionId);
-                // 이렇게 저장할건데 만약 sessionId 없으면 접속 시키고
-                // 있으면 다중창 띄워서 접속하는 거니까 최대 세션 수 제한 에러 띄우면 돼
-
-                // SimpleWsPrincipal에 roomId 추가
-                // String roomIdㅇ = accessor.getDestination();
-
-                // log.info("구독하겠습니다. " + roomId);
-
-                // WsPrincipal principal = (WsPrincipal) accessor.getUser();
-                // principal.setRoomId(roomId);
+                
 
                 break;
             case SEND:

@@ -6,6 +6,7 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
+import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 
 import com.example.stomp.app.infra.websocket.WsPrincipal;
 import com.example.stomp.app.util.StompHeaderUtil;
@@ -17,9 +18,11 @@ import lombok.extern.slf4j.Slf4j;
 public class ChatRoomCleanUpService {
 
     @EventListener
-    public void handleWebSocketDisconnectListener(SessionConnectedEvent event) {
+    public void handleWebSocketConnectedListener(SessionSubscribeEvent event) {
+        // 내일 구독 시에 목적지 얻을 수 있는지 확인하기.
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(event.getMessage(), StompHeaderAccessor.class);
         WsPrincipal wsPrincipal = StompHeaderUtil.getPrincipal(accessor);
+        System.out.println(accessor.getDestination());
 
     }
 

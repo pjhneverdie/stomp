@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-public class Participant {
+public class ChatMember {
 
     private String id;
 
@@ -21,8 +21,8 @@ public class Participant {
 
     private NetworkStatus networkStatus;
 
-    public static Participant create(String id, String nickname) {
-        return new Participant(id, nickname, PersonnelChapter.STAND_BY, NetworkStatus.CONNECTED);
+    public static ChatMember create(String id, String nickname) {
+        return new ChatMember(id, nickname, PersonnelChapter.STAND_BY, NetworkStatus.CONNECTED);
     }
 
 }

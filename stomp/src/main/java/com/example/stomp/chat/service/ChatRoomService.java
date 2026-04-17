@@ -43,20 +43,18 @@ public class ChatRoomService {
         return chatRoomRepository.save(ChatRoom.create(UUID.randomUUID().toString(), name, passCodes)).getId();
     }
 
-    public ChatRoom validateIfChatRoomExists(String roomId) {
-        return chatRoomRepository.findById(roomId).orElseGet(() -> {
+    public ChatRoom orElseThrow(String roomId) {
+        return chatRoomRepository.findById(roomId).orElseThrow(() -> {
             throw new AppException(ChatExceptions.UNEXISTS_CHAT);
         });
     }
 
-    
-
     public void comeIn(String roomId, String memberId, String sessionId, String code) throws Exception {
-        chatRoomRepository.findById(roomId).ifPresentOrElse(
-                (chatRoom) -> {
-
-                },
-                () -> {
+        entityStream.of(ChatRoom.class)
+                .filter(ChatRoom$.ID.eq(roomId)) // ChatRoom$는 자동 생성되는 메타 모델
+                .forEach(room -> {
+                    room.setName(newName);
+                    repository.save(room);
                 });
 
         // Map<Object, Object> chatroom = redis.opsForHash().entries(CHATROOM_KEY_PREFIX

@@ -32,7 +32,7 @@ public class ChatRoom {
 
     private List<String> passCodes;
 
-    private List<Participant> participants;
+    private List<ChatMember> chatMembers;
 
     private ChatChapter chapter;
 
@@ -45,26 +45,21 @@ public class ChatRoom {
                 ChatChapter.STAND_BY);
     }
 
+    public void validateConnection(String memberId) {
+        chatMembers.stream()
+                .filter(cms -> cms.getId().equals(memberId))
+                .findFirst().ifPresent((chatMember) -> {
+                    // It says this connection is an extra except for the existing one.
+                    Assert.isTrue(chatMember.getNetworkStatus() == NetworkStatus.CONNECTED, () -> {
+                        throw new AppException(ChatExceptions.MULTIPLE_WS_CONNECTION_DETECTED);
+                    });
+                });
+    }
+
     public void validatePassCode(String passCode) {
         Assert.isTrue(this.passCodes.contains(passCode), () -> {
             throw new AppException(ChatExceptions.UNMATCHABLE_MEMBER_CODE);
         });
-    }
-
-    public JoinType validateSession(String memberId) {
-        Optional<Participant> participantOp = participants.stream()
-                .filter(p -> p.getId().equals(memberId))
-                .findFirst();
-
-        if (participantOp.isPresent()) {
-            Assert.isTrue(participantOp.get().getNetworkStatus() != NetworkStatus.CONNECTED, () -> {
-                throw new AppException(ChatExceptions.MULTIPLE_WS_SESSION_DETECTED);
-            });
-
-            return JoinType.RECONNECTION;
-        }
-
-        return JoinType.FIRST_MET;
     }
 
 }

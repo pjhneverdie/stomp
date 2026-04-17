@@ -4,29 +4,34 @@ import java.security.Principal;
 
 import com.example.stomp.security.dto.HttpSessionMemberDetails;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 public class WsPrincipal implements Principal {
 
-    private final long memberId;
-    private final String memberCode;
+    private String memberId;
+
+    private String memberCode;
 
     @Setter
     private String roomId;
 
-    private final String httpSessionId;
+    private String httpSessionId;
 
-    public WsPrincipal(HttpSessionMemberDetails memberDetails) {
-        this.memberId = memberDetails.getId();
-        this.memberCode = memberDetails.getCode();
-        this.httpSessionId = memberDetails.getSessionId();
+    public static WsPrincipal create(HttpSessionMemberDetails memberDetails) {
+        return new WsPrincipal(Long.toString(memberDetails.getId()), memberDetails.getCode(), memberDetails.getRoomId(),
+                memberDetails.getSessionId());
     }
 
     @Override
     public String getName() {
-        return Long.toString(this.memberId);
+        return this.memberId;
     }
 
 }

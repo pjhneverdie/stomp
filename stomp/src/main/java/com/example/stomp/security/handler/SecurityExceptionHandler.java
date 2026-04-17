@@ -37,9 +37,6 @@ public class SecurityExceptionHandler
         logBriefError("AuthenticationEntryPoint", authException);
         convertToAppException(response, authException, HttpStatus.UNAUTHORIZED);
 
-
-
-        
     }
 
     // handle Exception caused by AuthenticationFailureHandler
@@ -60,18 +57,13 @@ public class SecurityExceptionHandler
 
     private void convertToAppException(HttpServletResponse response, Exception e, HttpStatus status)
             throws IOException {
-        AppException appException = new AppException(e.getMessage()) {
-            @Override
-            public HttpStatus getHttpStatus() {
-                return status;
-            }
-        };
+        AppException appException = new AppException();
 
         sendFailureResponse(response, appException);
     }
 
     private void sendFailureResponse(HttpServletResponse response, AppException e) throws IOException {
-        response.setStatus(e.getHttpStatus().value());
+        response.setStatus(e.getExceptionInfo().getHttpStatus().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
 
@@ -87,7 +79,7 @@ public class SecurityExceptionHandler
         }
 
         StackTraceElement firstLine = rootCause.getStackTrace()[0];
-        
+
         System.out.printf("[%s] 근본 원인: %s - %s (발생위치: %s:%d)%n",
                 handlerName,
                 rootCause.getClass().getSimpleName(),

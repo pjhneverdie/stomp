@@ -37,7 +37,7 @@ public interface ApiResponse<T> {
     }
 
     static Failure createDefaultFailureResponse(AppException e) {
-        return new Failure(null, e.getClass().getSimpleName(), e.getMessage(), e.getHttpStatus());
+        return new Failure(null, e.getClass().getSimpleName(), e.getMessage(), e.getExceptionInfo().getHttpStatus());
     }
 
 }

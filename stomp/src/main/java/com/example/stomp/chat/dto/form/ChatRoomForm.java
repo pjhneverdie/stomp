@@ -7,7 +7,7 @@ public abstract class ChatRoomForm {
     private ChatRoomForm() {
     }
 
-    public record Create(@NotBlank String name) {
+    public record Create(@NotBlank String name, @NotBlank String memberCode) {
     }
 
 }
