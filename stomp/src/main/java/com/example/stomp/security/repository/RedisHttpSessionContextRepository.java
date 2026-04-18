@@ -38,7 +38,127 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
 
     private final RedisTemplate<String, Object> redis;
 
-    
+    public void saveContext2(SecurityContext context, HttpServletRequest request, HttpServletResponse response) {
+        /**
+         * @formatter:off
+         * 
+         * OAuth2LoginAuthenticationFilter(AbstractAuthenticationProcessingFilter) will call this method
+         * when login succeed.
+         * 
+         * On this step, we have two to do.
+         * 
+         * 1. save the user's info in redis like session.
+         * 2. naturally switch session rather than blocking the new login try if the user logins with another paths
+         *    such as changing device.
+         * 
+         * @formatter:on
+         */
+        Optional.ofNullable(context.getAuthentication())
+                .filter(Authentication::isAuthenticated) // Make sure there are no negative specifics on authentication
+                                                         // process.
+                .ifPresent(at -> {
+                    String sessionId = CookieUtil.getCookie(request)
+                            .map(Cookie::getValue)
+                            .orElseGet(() -> UUID.randomUUID().toString()); // Create if absent.
+
+                    OidcMemberPrincipal pc = (OidcMemberPrincipal) at.getPrincipal();
+
+                    String luaScript = """
+                            --[[
+                                This Lua script manages user session swtiching.
+                                It ensures that even if multiple login requests occur simultaneously, no race conditions happen.
+                            --]]
+
+                            -- KEYS[1] : MEMBER_SESSION_INDEX_KEY_PREFIX
+                            -- KEYS[2] : SESSION_KEY_PREFIX
+                            -- KEYS[3] : session expiration in seconds
+
+                            -- ARGV[1] : memberId
+                            -- ARGV[2] : newSessionId
+                            -- ARGV[3] : memberCode
+                            -- ARGV[4] : authorities (comma separated)
+
+                            --[[
+                                1. See if a user already has session.
+                            --]]
+                            local memberIndexKey = KEYS[1] .. ARGV[1]
+                            local oldSessionId = redis.call('GET', memberIndexKey)
+
+                            -- Initialize variable to store old roomId
+                            local oldRoomId = nil
+
+                            if oldSessionId then
+                                -- 2. Get roomId from the old session
+                                local oldSessionKey = KEYS[2] .. oldSessionId
+                                oldRoomId = redis.call('HGET', oldSessionKey, 'roomId')
+
+                                -- 3. Delete the old session
+                                redis.call('DEL', oldSessionKey)
+                            end
+
+                            -- 4. Save the new session as a Redis Hash
+                            local newSessionKey = KEYS[2] .. ARGV[2]
+                            redis.call('HMSET', newSessionKey,
+                                'memberId', ARGV[1],
+                                'sessionId', ARGV[2],
+                                'memberCode', ARGV[3],
+                                'authorities', ARGV[4]
+                            )
+
+                            -- 5. If an old roomId exists, hand it over
+                            if oldRoomId then
+                                redis.call('HSET', newSessionKey, 'roomId', oldRoomId)
+                            end
+
+                            -- 6. Set TTL for the new session
+                            redis.call('EXPIRE', newSessionKey, KEYS[3])
+
+                            -- 7. Update memberId -> new sessionId index
+                            redis.call('SET', memberIndexKey, ARGV[2])
+                            redis.call('EXPIRE', memberIndexKey, KEYS[3])
+
+                            -- 8. Return old roomId (for WebSocket handover)
+                            return oldRoomId
+                            """;
+
+                    DefaultRedisScript<String> redisScript = new DefaultRedisScript<>();
+                    redisScript.setScriptText(luaScript);
+                    redisScript.setResultType(String.class);
+
+                    int expireSeconds = (int) TimeUnit.DAYS.toSeconds(1);
+
+                    String oldRoomId = redis.execute(
+                            redisScript,
+                            Arrays.asList(
+                                    SessionConstant.MEMBER_SESSION_INDEX_KEY_PREFIX,
+                                    SessionConstant.SESSION_KEY_PREFIX,
+                                    String.valueOf(expireSeconds)),
+                            pc.getId(),
+                            sessionId,
+                            pc.getCode(),
+                            SecurityUtil.authoritiesToString(at.getAuthorities()));
+
+                    // WebSocket handover 이벤트 처리
+                    if (oldRoomId != null) {
+                        /**
+                         * @formatter:off
+                         * Our quest doesn't end. You know that WebSocket still remains regardless of deletion of HttpSession.
+                         * We should make it disconnected as well.
+                         * 
+                         * The problem is, in here, Since we got multiple servers, We can't be sure whether the server which the user requests for login 
+                         * is the server which manages the WebSocket connection of the user's previous device. 
+                         * 
+                         * For this reason, we have to publish an event to all of the servers in order to cut them off.
+                         * @formatter:on 
+                         */
+
+                        // ..... event realted codes...
+                    }
+
+                    // 쿠키 설정
+                    CookieUtil.setCookie(sessionId, response);
+                });
+    }
 
     @Override
     public void saveContext(SecurityContext context, HttpServletRequest request, HttpServletResponse response) {

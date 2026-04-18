@@ -13,5 +13,5 @@ public class SessionConstant {
 
     // we have to able to find the member's session even when we have only memberId
     // this is a index key for making above happen
-    public static final String MEMBER_SESSION_INDEX_PREFIX = "member:session:";
+    public static final String MEMBER_SESSION_INDEX_KEY_PREFIX = "member:session:";
 }
