@@ -16,12 +16,13 @@ import org.springframework.util.Assert;
 
 import com.example.stomp.app.constant.SessionConstant;
 import com.example.stomp.app.dto.exception.AppException;
+import com.example.stomp.chat.document.ChatMember;
 import com.example.stomp.chat.document.ChatRoom;
 import com.example.stomp.chat.document.enum_type.NetworkStatus;
 import com.example.stomp.chat.dto.exception.ChatExceptions;
 import com.example.stomp.chat.repository.ChatRoomRepository;
-import com.example.stomp.security.dto.SimpleAuthenticationToken;
-import com.example.stomp.security.dto.SimpleAuthenticationToken.SimpleMemberDetails;
+import com.example.stomp.security.dto.RedisHttpSessionAuthenticationToken;
+import com.example.stomp.security.dto.RedisHttpSessionAuthenticationToken.SimpleMemberDetails;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -49,11 +50,11 @@ public class ChatRoomService {
         });
     }
 
-    public void comeIn(String roomId, String memberId, String sessionId, String code) throws Exception {
+    public void comeIn(String roomId, String memberId, String memberCode) throws Exception {
+        ChatMember chatMember = ChatMember.create(roomId, memberCode);
         entityStream.of(ChatRoom.class)
                 .filter(ChatRoom$.ID.eq(roomId)) // ChatRoom$는 자동 생성되는 메타 모델
                 .forEach(room -> {
-                    room.setName(newName);
                     repository.save(room);
                 });
 

@@ -1,36 +1,30 @@
 package com.example.stomp.security.repository;
 
-import java.time.Duration;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
-import org.springframework.boot.web.server.Cookie.SameSite;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.DeferredSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextHolderStrategy;
+import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.context.HttpRequestResponseHolder;
-import org.springframework.security.web.context.SecurityContextHolderFilter;
+
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Component;
 
 import com.example.stomp.app.constant.SessionConstant;
-import com.example.stomp.app.event.SessionSwitchedEvent;
+import com.example.stomp.app.util.CookieUtil;
 import com.example.stomp.app.util.SecurityUtil;
-import com.example.stomp.member.domain.Member;
-import com.example.stomp.member.dto.OidcMemberDetails;
-import com.example.stomp.security.dto.SimpleAuthenticationToken;
-import com.example.stomp.security.event.SessionEventPublisher;
+import com.example.stomp.member.dto.OidcMemberPrincipal;
+import com.example.stomp.security.dto.RedisHttpSessionMemberPrincipal;
+import com.example.stomp.security.dto.RedisHttpSessionAuthenticationToken;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,38 +36,47 @@ import lombok.RequiredArgsConstructor;
 public class RedisHttpSessionContextRepository implements SecurityContextRepository {
 
     private final RedisTemplate<String, Object> redis;
-    private final SessionEventPublisher eventPublisher;
 
     @Override
     public void saveContext(SecurityContext context, HttpServletRequest request, HttpServletResponse response) {
-        String sessionId = Optional.ofNullable(getCookie(request))
+        String sessionId = CookieUtil.getCookie(request)
                 .map(Cookie::getValue)
-                .orElseGet(() -> UUID.randomUUID().toString());
+                .orElseGet(() -> UUID.randomUUID().toString()); // Create it if absence.
 
+                OAuth2LoginAuthenticationFilter
+
+        /**
+         * @formatter:off
+         * 
+         * OAuth2LoginAuthenticationFilter(AbstractAuthenticationProcessingFilter) will call this method
+         * when login succeed.
+         * 
+         * On this step, we have two to do.
+         * 1. save user's info in redis like session.
+         * 
+         * @formatter:on
+         */
         Optional.ofNullable(context.getAuthentication())
                 .filter(Authentication::isAuthenticated)
-                .filter(authentication -> !(authentication instanceof AnonymousAuthenticationToken))
-                .ifPresent(authentication -> {
-                    Member member = ((OidcMemberDetails) authentication.getPrincipal()).getMember();
-                    String stringMemberId = member.getId().toString();
+                .ifPresent(at -> {
+                    OidcMemberPrincipal pc = (OidcMemberPrincipal) at.getPrincipal();
 
-                    getAndDeleteExisitingSession(member.getId().toString()).ifPresent((oldSessionId) -> {
-                        // publish event notifying session switched
+                    getAndDeleteExisitingSession(pc.getId()).ifPresent((oldSessionId) -> {
+                        // Publish the event notifying session switched.
+
                     });
 
-                    Map<String, String> sessionMap = Map.of(
-                            SessionConstant.SESSION_MEMBER_ID_KEY, stringMemberId,
+                    Map<String, String> hashFields = Map.of(
+                            SessionConstant.SESSION_MEMBER_ID_KEY, pc.getId(),
                             SessionConstant.SESSION_SESSION_ID_KEY, sessionId,
-                            SessionConstant.SESSION_MEMBER_CODE_KEY, member.getCode(),
+                            SessionConstant.SESSION_MEMBER_CODE_KEY, pc.getCode(),
                             SessionConstant.SESSION_AUHTORITIES_KEY, SecurityUtil.authoritiesToString(
-                                    authentication.getAuthorities()));
+                                    at.getAuthorities()));
 
-                    saveSession(sessionId, sessionMap);
-                    createIndex(sessionId, stringMemberId);
-                    setCookie(sessionId, response);
+                    saveSession(sessionId, hashFields);
+                    createIndex(sessionId, pc.getId());
+                    CookieUtil.setCookie(sessionId, response);
                 });
-
-        // 다시 시큐리티 콘텍스트 저장
     }
 
     private Optional<String> getAndDeleteExisitingSession(String memberId) {
@@ -99,101 +102,119 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
         redis.expire(indexKey, 1, TimeUnit.DAYS);
     }
 
-    private void setCookie(String sessionId, HttpServletResponse response) {
-        ResponseCookie cookie = ResponseCookie.from(SessionConstant.COOKIE_NAME, sessionId)
-                .secure(true)
-                .httpOnly(true)
-                .maxAge(Duration.ofDays(1))
-                .sameSite(SameSite.LAX.toString())
-                .path(SessionConstant.COOKIE_PATH)
-                .domain("app.github.dev")
-                .build();
-
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-    }
-
     @Override
     public boolean containsContext(HttpServletRequest request) {
-        return Optional.ofNullable(getCookie(request))
+        return CookieUtil.getCookie(request)
                 .map(Cookie::getValue)
                 .map(sessionId -> SessionConstant.SESSION_KEY_PREFIX + sessionId)
-                .map(redisKey -> Boolean.TRUE.equals(redis.hasKey(redisKey)))
+                .map(sessionKey -> Boolean.TRUE.equals(redis.hasKey(sessionKey)))
                 .orElse(false);
     }
 
     @Override
     public DeferredSecurityContext loadDeferredContext(HttpServletRequest request) {
-        Supplier<SecurityContext> supplier = () -> readSecurityContextFromCookie(getCookie(request));
+        return new RedisHttpSessionSecurityDefferedContext(() -> CookieUtil.getCookie(request)
+                .map(cookie -> {
+                    Optional<SecurityContext> scOptional = readSecurityContextFromRedis(cookie.getValue());
 
-        return new DeferredSecurityContext() {
-            @Override
-            public SecurityContext get() {
-                return supplier.get();
-            }
+                    // Extend the Expiry of session.
+                    scOptional.ifPresent((sc) -> {
+                        extendExpiry(cookie.getValue(), sc.getAuthentication().getName());
+                    });
 
-            @Override
-            public boolean isGenerated() {
-                return false;
-            }
-        };
+                    // If sc is null, RedisHttpSessionSecurityDefferedContext will create it.
+                    return scOptional.orElse(null);
+                })
+                /**
+                 * @formatter:off
+                 * 
+                 * If cookie is null, return null supplier.
+                 * Then RedisHttpSessionSecurityDefferedContext will create empty SecurityContext.
+                 * 
+                 * @formatter:on
+                 */
+                .orElse(null),
+                SecurityContextHolder.getContextHolderStrategy());
     }
 
-    private SecurityContext readSecurityContextFromCookie(Cookie cookie) {
-        SecurityContext sc = SecurityContextHolder.createEmptyContext();
+    private Optional<SecurityContext> readSecurityContextFromRedis(String sessionId) {
+        Map<Object, Object> hashFileds = redis.opsForHash()
+                .entries(SessionConstant.SESSION_KEY_PREFIX + sessionId);
 
-        Optional.ofNullable(cookie)
-                .map(this::createAuthentication)
-                .ifPresent(auth -> {
-                    sc.setAuthentication(auth);
+        if (hashFileds.isEmpty())
+            return Optional.empty();
 
-                    if (auth.getPrincipal() instanceof SimpleAuthenticationToken.SimpleMemberDetails details) {
-                        extendExpiry(cookie.getValue(), details.memberId());
-                    }
-                });
+        SecurityContext sc = SecurityContextHolder.getContextHolderStrategy().createEmptyContext();
 
-        return sc;
+        RedisHttpSessionAuthenticationToken at = new RedisHttpSessionAuthenticationToken(
+                RedisHttpSessionMemberPrincipal.fromHashFields(hashFileds));
+
+        sc.setAuthentication(at);
+
+        return Optional.of(sc);
     }
 
-    private Authentication createAuthentication(Cookie cookie) {
-        Map<Object, Object> sessionMap = redis.opsForHash()
-                .entries(SessionConstant.SESSION_KEY_PREFIX + cookie.getValue());
-
-        if (sessionMap.isEmpty())
-            return null;
-
-        String memberId = (String) sessionMap.get(SessionConstant.SESSION_MEMBER_ID_KEY);
-        String sessionId = (String) sessionMap.get(SessionConstant.SESSION_SESSION_ID_KEY);
-        String code = (String) sessionMap.get(SessionConstant.SESSION_MEMBER_CODE_KEY);
-        String auths = (String) sessionMap.get(SessionConstant.SESSION_AUHTORITIES_KEY);
-        String roomId = (String) sessionMap.get(SessionConstant.SESSION_ROOM_ID_KEY);
-
-        if (sessionId == null || memberId == null || auths == null)
-            return null;
-
-        return new SimpleAuthenticationToken(
-                new SimpleAuthenticationToken.SimpleMemberDetails(
-                        Long.parseLong(memberId),
-                        sessionId,
-                        code,
-                        SecurityUtil.stringToAuthorities(auths), roomId));
-    }
-
-    private void extendExpiry(String sessionId, long memberId) {
+    private void extendExpiry(String sessionId, String memberId) {
         redis.expire(SessionConstant.SESSION_KEY_PREFIX + sessionId, 1, TimeUnit.DAYS);
         redis.expire(SessionConstant.MEMBER_SESSION_INDEX_PREFIX + memberId, 1, TimeUnit.DAYS);
     }
 
+    // We are using over Security 6.0.
     @Override
     public SecurityContext loadContext(HttpRequestResponseHolder requestResponseHolder) {
         return loadDeferredContext(requestResponseHolder.getRequest()).get();
     }
 
-    private Cookie getCookie(HttpServletRequest request) {
-        return Stream.ofNullable(request.getCookies())
-                .flatMap(Arrays::stream)
-                .filter(c -> SessionConstant.COOKIE_NAME.equals(c.getName()))
-                .findFirst()
-                .orElse(null);
+    /**
+     * @formatter:off
+     * 
+     * Slightly different version of SupplierDeferredSecurityContext used in SecurityContextRepository the library made.
+     * 
+     * @formatter:on
+     */
+    @RequiredArgsConstructor
+    private static final class RedisHttpSessionSecurityDefferedContext implements DeferredSecurityContext {
+
+        private final Supplier<SecurityContext> supplier;
+
+        private final SecurityContextHolderStrategy strategy;
+
+        private boolean missingContext;
+
+        private SecurityContext securityContext;
+
+        @Override
+        public SecurityContext get() {
+            init();
+            return this.securityContext;
+        }
+
+        /**
+         * @formatter:off
+         * 
+         * This method is used only in DelegatingSecurityContextRepository.
+         * We don't have any relation with it under the case we use our custom SecurityContextRepository.
+         * 
+         * @formatter:on
+         */
+        @Override
+        public boolean isGenerated() {
+            init();
+            return this.missingContext;
+        }
+
+        private void init() {
+            if (this.securityContext != null) {
+                return;
+            }
+
+            this.securityContext = this.supplier.get();
+            this.missingContext = (this.securityContext == null);
+            if (this.missingContext) {
+                this.securityContext = this.strategy.createEmptyContext();
+            }
+        }
+
     }
 
 }

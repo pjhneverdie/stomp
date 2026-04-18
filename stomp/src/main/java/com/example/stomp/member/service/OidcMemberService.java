@@ -9,14 +9,14 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Component;
 
 import com.example.stomp.member.domain.Member;
-import com.example.stomp.member.dto.OidcMemberDetails;
+import com.example.stomp.member.dto.OidcMemberPrincipal;
 import com.example.stomp.member.repository.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class SimpleOidcUserService extends OidcUserService {
+public class OidcMemberService extends OidcUserService {
 
         private final MemberRepository memberRepository;
 
@@ -29,7 +29,7 @@ public class SimpleOidcUserService extends OidcUserService {
                                                 oidcUser.getPicture(),
                                                 UUID.randomUUID().toString())));
 
-                return new OidcMemberDetails(member, oidcUser.getIdToken(),
+                return new OidcMemberPrincipal(member, oidcUser.getIdToken(),
                                 oidcUser.getUserInfo());
         }
 

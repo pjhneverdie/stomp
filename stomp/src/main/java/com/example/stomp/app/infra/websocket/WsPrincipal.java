@@ -2,7 +2,7 @@ package com.example.stomp.app.infra.websocket;
 
 import java.security.Principal;
 
-import com.example.stomp.security.dto.HttpSessionMemberDetails;
+import com.example.stomp.security.dto.RedisHttpSessionMemberPrincipal;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -24,7 +24,7 @@ public class WsPrincipal implements Principal {
 
     private String httpSessionId;
 
-    public static WsPrincipal create(HttpSessionMemberDetails memberDetails) {
+    public static WsPrincipal create(RedisHttpSessionMemberPrincipal memberDetails) {
         return new WsPrincipal(Long.toString(memberDetails.getId()), memberDetails.getCode(), memberDetails.getRoomId(),
                 memberDetails.getSessionId());
     }

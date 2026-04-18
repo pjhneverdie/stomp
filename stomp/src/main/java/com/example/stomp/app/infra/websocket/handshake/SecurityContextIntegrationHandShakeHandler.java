@@ -14,7 +14,7 @@ import com.example.stomp.app.infra.websocket.WsPrincipal;
 import com.example.stomp.app.util.SecurityUtil;
 import com.example.stomp.chat.document.ChatRoom;
 import com.example.stomp.chat.service.ChatRoomService;
-import com.example.stomp.security.dto.HttpSessionMemberDetails;
+import com.example.stomp.security.dto.RedisHttpSessionMemberPrincipal;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

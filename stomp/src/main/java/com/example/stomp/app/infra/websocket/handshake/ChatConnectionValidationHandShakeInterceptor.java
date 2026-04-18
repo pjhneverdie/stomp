@@ -12,7 +12,7 @@ import org.springframework.web.socket.WebSocketHandler;
 
 import com.example.stomp.app.util.SecurityUtil;
 import com.example.stomp.chat.service.ChatRoomService;
-import com.example.stomp.security.dto.HttpSessionMemberDetails;
+import com.example.stomp.security.dto.RedisHttpSessionMemberPrincipal;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,7 +26,7 @@ public class ChatConnectionValidationHandShakeInterceptor implements HandshakeIn
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler,
             Map<String, Object> attributes) throws Exception {
 
-        HttpSessionMemberDetails memberDetails = SecurityUtil.getPrincipal();
+        RedisHttpSessionMemberPrincipal memberDetails = SecurityUtil.getPrincipal();
 
         /**
          * @formatter:off

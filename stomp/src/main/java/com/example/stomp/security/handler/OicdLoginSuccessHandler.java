@@ -27,10 +27,6 @@ public class OicdLoginSuccessHandler implements AuthenticationSuccessHandler {
         @Override
         public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                         Authentication authentication) throws IOException, ServletException {
-                // go back to the frontend
-                String setCookieHeader = response.getHeader(HttpHeaders.SET_COOKIE);
-                log.info("응답에 담긴 쿠키 확인 가보자잇: {}", setCookieHeader);
-
                 response.sendRedirect(frontendOrigin);
         }
 

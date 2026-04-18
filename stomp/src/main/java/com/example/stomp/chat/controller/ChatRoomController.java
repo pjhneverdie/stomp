@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.stomp.app.dto.ApiResponse;
 import com.example.stomp.chat.dto.form.ChatRoomForm;
 import com.example.stomp.chat.service.ChatRoomService;
-import com.example.stomp.security.dto.SimpleAuthenticationToken.SimpleMemberDetails;
+import com.example.stomp.security.dto.RedisHttpSessionAuthenticationToken.SimpleMemberDetails;
 
 import lombok.RequiredArgsConstructor;
 

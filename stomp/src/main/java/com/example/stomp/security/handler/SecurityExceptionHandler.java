@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import com.example.stomp.app.dto.ApiResponse;
 import com.example.stomp.app.dto.exception.AppException;
+import com.example.stomp.app.dto.exception.ExceptionInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -57,7 +58,17 @@ public class SecurityExceptionHandler
 
     private void convertToAppException(HttpServletResponse response, Exception e, HttpStatus status)
             throws IOException {
-        AppException appException = new AppException();
+        AppException appException = new AppException(new ExceptionInfo() {
+            @Override
+            public HttpStatus getHttpStatus() {
+                return HttpStatus.BAD_REQUEST;
+            }
+
+            @Override
+            public String getMessage() {
+                return e.getMessage();
+            }
+        });
 
         sendFailureResponse(response, appException);
     }

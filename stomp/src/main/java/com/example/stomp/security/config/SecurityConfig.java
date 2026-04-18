@@ -1,6 +1,5 @@
 package com.example.stomp.security.config;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -11,10 +10,9 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.cors.CorsConfigurationSource;
 
 import com.example.stomp.app.constant.SessionConstant;
-import com.example.stomp.member.service.SimpleOidcUserService;
+import com.example.stomp.member.service.OidcMemberService;
 import com.example.stomp.security.handler.OicdLoginSuccessHandler;
 import com.example.stomp.security.handler.RedisHttpSessionLogoutHandler;
 import com.example.stomp.security.handler.SecurityExceptionHandler;
@@ -29,7 +27,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-        private final SimpleOidcUserService simpleOidcUserService;
+        private final OidcMemberService simpleOidcUserService;
         private final OicdLoginSuccessHandler oicdLoginSuccessHandler;
         private final SecurityExceptionHandler securityExceptionHandler;
         private final RedisHttpSessionLogoutHandler redisHttpSessionLogoutHandler;
@@ -38,12 +36,6 @@ public class SecurityConfig {
         private final RedisOAuth2AuthorizationRequestRepository oAuth2AuthorizationRequestRepository;
 
         private static final String LOGOUT_PATH = "/logout";
-
-        // @Bean
-        @Profile({ "local", "test" })
-        public WebSecurityCustomizer webSecurityCustomizerDebug() {
-                return (web) -> web.debug(true);
-        }
 
         @Bean
         SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {

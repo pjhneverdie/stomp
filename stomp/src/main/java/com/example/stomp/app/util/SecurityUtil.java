@@ -9,7 +9,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.example.stomp.security.dto.HttpSessionMemberDetails;
+import com.example.stomp.security.dto.RedisHttpSessionMemberPrincipal;
 
 public final class SecurityUtil {
 
@@ -28,8 +28,8 @@ public final class SecurityUtil {
                 .toList();
     }
 
-    public static HttpSessionMemberDetails getPrincipal() {
-        return (HttpSessionMemberDetails) SecurityContextHolder.getContext().getAuthentication();
+    public static RedisHttpSessionMemberPrincipal getPrincipal() {
+        return (RedisHttpSessionMemberPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
 }

@@ -6,7 +6,7 @@ import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Component;
 
 import com.example.stomp.app.constant.SessionConstant;
-import com.example.stomp.security.dto.SimpleAuthenticationToken;
+import com.example.stomp.security.dto.RedisHttpSessionAuthenticationToken;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,7 +29,7 @@ public class RedisHttpSessionLogoutHandler implements LogoutHandler {
 
         if (authentication != null) {
             redis.delete(SessionConstant.MEMBER_SESSION_INDEX_PREFIX
-                    + ((SimpleAuthenticationToken.SimpleMemberDetails) authentication
+                    + ((RedisHttpSessionAuthenticationToken.SimpleMemberDetails) authentication
                             .getPrincipal()).memberId());
         }
     }

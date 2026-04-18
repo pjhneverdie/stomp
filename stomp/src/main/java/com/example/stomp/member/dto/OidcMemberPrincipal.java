@@ -1,8 +1,7 @@
 package com.example.stomp.member.dto;
 
-import java.util.Collection;
+import java.security.Principal;
 
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
@@ -11,17 +10,21 @@ import com.example.stomp.member.domain.Member;
 
 import lombok.Getter;
 
+// OidcAuthorizationCodeAuthenticationProvider will set this as Principal.
 @Getter
-public class OidcMemberDetails extends DefaultOidcUser {
+public class OidcMemberPrincipal extends DefaultOidcUser {
 
-    private final Member member;
+    private final String id;
+    private final String code;
 
-    public OidcMemberDetails(
+    public OidcMemberPrincipal(
             Member member,
             OidcIdToken idToken,
             OidcUserInfo userInfo) {
+
         super(member.getAuthorities(), idToken, userInfo);
-        this.member = member;
+        this.id = String.valueOf(member.getId());
+        this.code = member.getCode();
     }
 
 }
