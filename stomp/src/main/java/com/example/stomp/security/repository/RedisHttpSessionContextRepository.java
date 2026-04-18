@@ -88,15 +88,15 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
                             local oldRoomId = nil
 
                             if oldSessionId then
-                                -- 2. Get roomId from the old session
+                                
                                 local oldSessionKey = KEYS[2] .. oldSessionId
                                 oldRoomId = redis.call('HGET', oldSessionKey, 'roomId')
 
-                                -- 3. Delete the old session
+                                
                                 redis.call('DEL', oldSessionKey)
                             end
 
-                            -- 4. Save the new session as a Redis Hash
+                           
                             local newSessionKey = KEYS[2] .. ARGV[2]
                             redis.call('HMSET', newSessionKey,
                                 'memberId', ARGV[1],
@@ -105,19 +105,19 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
                                 'authorities', ARGV[4]
                             )
 
-                            -- 5. If an old roomId exists, hand it over
+                            
                             if oldRoomId then
                                 redis.call('HSET', newSessionKey, 'roomId', oldRoomId)
                             end
 
-                            -- 6. Set TTL for the new session
+                           
                             redis.call('EXPIRE', newSessionKey, KEYS[3])
 
-                            -- 7. Update memberId -> new sessionId index
+                           
                             redis.call('SET', memberIndexKey, ARGV[2])
                             redis.call('EXPIRE', memberIndexKey, KEYS[3])
 
-                            -- 8. Return old roomId (for WebSocket handover)
+                            
                             return oldRoomId
                             """;
 
