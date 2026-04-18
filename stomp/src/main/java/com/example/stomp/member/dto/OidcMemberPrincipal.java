@@ -1,7 +1,5 @@
 package com.example.stomp.member.dto;
 
-import java.security.Principal;
-
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;

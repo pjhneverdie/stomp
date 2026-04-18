@@ -1,5 +1,7 @@
 package com.example.stomp.security.repository;
 
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -7,13 +9,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import org.springframework.data.redis.core.RedisTemplate;
-
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.DeferredSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextHolderStrategy;
-import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.context.HttpRequestResponseHolder;
 
 import org.springframework.security.web.context.SecurityContextRepository;
@@ -37,14 +38,10 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
 
     private final RedisTemplate<String, Object> redis;
 
+    
+
     @Override
     public void saveContext(SecurityContext context, HttpServletRequest request, HttpServletResponse response) {
-        String sessionId = CookieUtil.getCookie(request)
-                .map(Cookie::getValue)
-                .orElseGet(() -> UUID.randomUUID().toString()); // Create it if absence.
-
-                OAuth2LoginAuthenticationFilter
-
         /**
          * @formatter:off
          * 
@@ -52,26 +49,65 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
          * when login succeed.
          * 
          * On this step, we have two to do.
-         * 1. save user's info in redis like session.
+         * 1. save the user's info in redis like session.
+         * 2. switch session if the user logins with another paths.
          * 
          * @formatter:on
          */
         Optional.ofNullable(context.getAuthentication())
                 .filter(Authentication::isAuthenticated)
                 .ifPresent(at -> {
+                    String sessionId = CookieUtil.getCookie(request)
+                            .map(Cookie::getValue)
+                            .orElseGet(() -> UUID.randomUUID().toString()); // Create it if absence.
+
                     OidcMemberPrincipal pc = (OidcMemberPrincipal) at.getPrincipal();
 
-                    getAndDeleteExisitingSession(pc.getId()).ifPresent((oldSessionId) -> {
-                        // Publish the event notifying session switched.
+                    /**
+                     * @formatter:off
+                     * 
+                     * We got secondary index on the session so that we can find which session the user has.
+                     * If the user logins, check if he already has a session.
+                     * 
+                     * If it is, delete existing one and handover the roomId to new session making the user can track their ongoing chat.
+                     * 
+                     * @formatter:on
+                     */
+                    String oldRoomId = getOldSessionId(pc.getId())
+                            .flatMap(oldSessionId -> {
+                                Optional<String> roomIdOpt = getOldRoomId(oldSessionId);
 
-                    });
+                                deleteOldSession(oldSessionId);
 
-                    Map<String, String> hashFields = Map.of(
+                                return roomIdOpt;
+                            })
+                            .orElse(null);
+
+                    Map<String, String> hashFields = new HashMap<>(Map.of(
                             SessionConstant.SESSION_MEMBER_ID_KEY, pc.getId(),
                             SessionConstant.SESSION_SESSION_ID_KEY, sessionId,
                             SessionConstant.SESSION_MEMBER_CODE_KEY, pc.getCode(),
-                            SessionConstant.SESSION_AUHTORITIES_KEY, SecurityUtil.authoritiesToString(
-                                    at.getAuthorities()));
+                            SessionConstant.SESSION_AUHTORITIES_KEY,
+                            SecurityUtil.authoritiesToString(at.getAuthorities())));
+
+                    if (oldRoomId != null) {
+                        // Handover it.
+                        hashFields.put(SessionConstant.SESSION_ROOM_ID_KEY, oldRoomId);
+
+                        /**
+                         * @formatter:off
+                         * Our quest doesn't end. You know that WebSocket still remains regardless of deletion of HttpSession.
+                         * We should make it disconnected as well.
+                         * 
+                         * The problem is, in here, Since we got multiple servers, We can't be sure whether the server which the user requests for login 
+                         * is the server which manages the WebSocket connection of the user's previous device. 
+                         * 
+                         * For this reason, we have to publish an event to all of the servers in order to cut them off.
+                         * @formatter:on 
+                         */
+
+                        // ..... event realted codes...
+                    }
 
                     saveSession(sessionId, hashFields);
                     createIndex(sessionId, pc.getId());
@@ -79,13 +115,21 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
                 });
     }
 
-    private Optional<String> getAndDeleteExisitingSession(String memberId) {
-        return Optional.ofNullable((String) redis.opsForValue()
-                .getAndDelete(SessionConstant.MEMBER_SESSION_INDEX_PREFIX + memberId))
-                .map(sessionId -> {
-                    redis.delete(SessionConstant.SESSION_KEY_PREFIX + sessionId);
-                    return sessionId;
-                });
+    private Optional<String> getOldSessionId(String memberId) {
+        return Optional
+                .ofNullable((String) redis.opsForValue()
+                        .getAndDelete(SessionConstant.MEMBER_SESSION_INDEX_PREFIX + memberId));
+    }
+
+    private Optional<String> getOldRoomId(String oldSessionId) {
+        return Optional.ofNullable((String) redis.opsForHash()
+                .get(SessionConstant.SESSION_KEY_PREFIX + oldSessionId,
+                        SessionConstant.SESSION_ROOM_ID_KEY));
+
+    }
+
+    private void deleteOldSession(String oldSessionId) {
+        redis.delete(SessionConstant.SESSION_KEY_PREFIX + oldSessionId);
     }
 
     private void saveSession(String sessionId, Map<String, String> sessionMap) {
@@ -96,10 +140,10 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
     }
 
     private void createIndex(String sessionId, String memberId) {
-        String indexKey = SessionConstant.MEMBER_SESSION_INDEX_PREFIX + memberId;
+        String key = SessionConstant.MEMBER_SESSION_INDEX_PREFIX + memberId;
 
-        redis.opsForValue().set(indexKey, sessionId);
-        redis.expire(indexKey, 1, TimeUnit.DAYS);
+        redis.opsForValue().set(key, sessionId);
+        redis.expire(key, 1, TimeUnit.DAYS);
     }
 
     @Override
