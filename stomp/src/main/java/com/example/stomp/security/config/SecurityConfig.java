@@ -2,14 +2,12 @@ package com.example.stomp.security.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.logout.CookieClearingLogoutHandler;
 
 import com.example.stomp.app.constant.SessionConstant;
 import com.example.stomp.member.service.OidcMemberService;
@@ -18,7 +16,7 @@ import com.example.stomp.security.handler.RedisHttpSessionLogoutHandler;
 import com.example.stomp.security.handler.SecurityExceptionHandler;
 import com.example.stomp.security.handler.RedisHttpSessionLogoutSuccessHandler;
 import com.example.stomp.security.repository.RedisHttpSessionContextRepository;
-import com.example.stomp.security.repository.RedisOAuth2AuthorizationRequestRepository;
+import com.example.stomp.security.repository.RedisHttpSessionAuthorizationRequestRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -33,7 +31,7 @@ public class SecurityConfig {
         private final RedisHttpSessionLogoutHandler redisHttpSessionLogoutHandler;
         private final RedisHttpSessionLogoutSuccessHandler sessionLogoutSuccessHandler;
         private final RedisHttpSessionContextRepository redisHttpSessionContextRepository;
-        private final RedisOAuth2AuthorizationRequestRepository oAuth2AuthorizationRequestRepository;
+        private final RedisHttpSessionAuthorizationRequestRepository oAuth2AuthorizationRequestRepository;
 
         private static final String LOGOUT_PATH = "/logout";
 
@@ -47,11 +45,11 @@ public class SecurityConfig {
                                                 .anyRequest().authenticated());
 
                 http
-                                .csrf(AbstractHttpConfigurer::disable) // we will be followed by same-site
-                                .httpBasic(AbstractHttpConfigurer::disable) // we are using https session login
-                                .formLogin(AbstractHttpConfigurer::disable) // we are using OIDC
-                                .rememberMe(AbstractHttpConfigurer::disable) // we provide API only
-                                .requestCache(requestCache -> requestCache.disable()); // we provide API only
+                                .csrf(AbstractHttpConfigurer::disable)
+                                .httpBasic(AbstractHttpConfigurer::disable)
+                                .formLogin(AbstractHttpConfigurer::disable)
+                                .rememberMe(AbstractHttpConfigurer::disable)
+                                .requestCache(requestCache -> requestCache.disable());
 
                 http.oauth2Login((config) -> config
                                 .userInfoEndpoint((endpoint) -> endpoint.oidcUserService(simpleOidcUserService))
@@ -64,16 +62,13 @@ public class SecurityConfig {
                                                                 .authenticationEntryPoint(securityExceptionHandler)
                                                                 .accessDeniedHandler(securityExceptionHandler));
 
-                http
-                                .sessionManagement(session -> session
-                                                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
-                                .securityContext(context -> context
-                                                .securityContextRepository(redisHttpSessionContextRepository));
+                http.securityContext(context -> context
+                                .securityContextRepository(redisHttpSessionContextRepository));
 
                 http.logout(logout -> logout
                                 .logoutUrl(LOGOUT_PATH)
-                                .deleteCookies(SessionConstant.COOKIE_NAME)
                                 .addLogoutHandler(redisHttpSessionLogoutHandler)
+                                .addLogoutHandler(new CookieClearingLogoutHandler(SessionConstant.COOKIE_NAME))
                                 .logoutSuccessHandler(sessionLogoutSuccessHandler));
 
                 return http.build();

@@ -6,11 +6,12 @@ import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Component;
 
 import com.example.stomp.app.constant.SessionConstant;
-import com.example.stomp.security.dto.RedisHttpSessionAuthenticationToken;
+import com.example.stomp.app.util.CookieUtil;
+import com.example.stomp.security.dto.RedisHttpSessionMemberPrincipal;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
 @Component
@@ -21,17 +22,15 @@ public class RedisHttpSessionLogoutHandler implements LogoutHandler {
 
     @Override
     public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
-        HttpSession session = request.getSession(false);
+        CookieUtil.getLoginCookie(request)
+                .map(Cookie::getValue).ifPresent((sessionId) -> {
+                    String memberId = ((RedisHttpSessionMemberPrincipal) authentication
+                            .getPrincipal()).getId();
 
-        if (session != null) {
-            redis.delete(SessionConstant.SESSION_KEY_PREFIX + session.getId());
-        }
-
-        if (authentication != null) {
-            redis.delete(SessionConstant.MEMBER_SESSION_INDEX_PREFIX
-                    + ((RedisHttpSessionAuthenticationToken.SimpleMemberDetails) authentication
-                            .getPrincipal()).memberId());
-        }
+                    redis.delete(SessionConstant.SESSION_KEY_PREFIX + sessionId);
+                    redis.delete(SessionConstant.MEMBER_SESSION_INDEX_KEY_PREFIX
+                            + memberId);
+                });
     }
 
 }

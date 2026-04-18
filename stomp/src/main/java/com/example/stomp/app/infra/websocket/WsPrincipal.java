@@ -25,7 +25,7 @@ public class WsPrincipal implements Principal {
     private String httpSessionId;
 
     public static WsPrincipal create(RedisHttpSessionMemberPrincipal memberDetails) {
-        return new WsPrincipal(Long.toString(memberDetails.getId()), memberDetails.getCode(), memberDetails.getRoomId(),
+        return new WsPrincipal(memberDetails.getId(), memberDetails.getCode(), memberDetails.getRoomId(),
                 memberDetails.getSessionId());
     }
 

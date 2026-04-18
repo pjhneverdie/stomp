@@ -22,7 +22,6 @@ import com.example.stomp.chat.document.enum_type.NetworkStatus;
 import com.example.stomp.chat.dto.exception.ChatExceptions;
 import com.example.stomp.chat.repository.ChatRoomRepository;
 import com.example.stomp.security.dto.RedisHttpSessionAuthenticationToken;
-import com.example.stomp.security.dto.RedisHttpSessionAuthenticationToken.SimpleMemberDetails;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -51,12 +50,12 @@ public class ChatRoomService {
     }
 
     public void comeIn(String roomId, String memberId, String memberCode) throws Exception {
-        ChatMember chatMember = ChatMember.create(roomId, memberCode);
-        entityStream.of(ChatRoom.class)
-                .filter(ChatRoom$.ID.eq(roomId)) // ChatRoom$는 자동 생성되는 메타 모델
-                .forEach(room -> {
-                    repository.save(room);
-                });
+        // ChatMember chatMember = ChatMember.create(roomId, memberCode);
+        // entityStream.of(ChatRoom.class)
+        //         .filter(ChatRoom$.ID.eq(roomId)) // ChatRoom$는 자동 생성되는 메타 모델
+        //         .forEach(room -> {
+        //             repository.save(room);
+        //         });
 
         // Map<Object, Object> chatroom = redis.opsForHash().entries(CHATROOM_KEY_PREFIX
         // + roomId);

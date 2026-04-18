@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.stomp.app.dto.ApiResponse;
 import com.example.stomp.chat.dto.form.ChatRoomForm;
 import com.example.stomp.chat.service.ChatRoomService;
-import com.example.stomp.security.dto.RedisHttpSessionAuthenticationToken.SimpleMemberDetails;
+import com.example.stomp.security.dto.RedisHttpSessionMemberPrincipal;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,9 +25,9 @@ public class ChatRoomController {
 
     @PostMapping("/create")
     public ApiResponse<String> create(@RequestBody ChatRoomForm.Create form,
-            @AuthenticationPrincipal SimpleMemberDetails memberDetails) {
+            @AuthenticationPrincipal RedisHttpSessionMemberPrincipal principal) {
         return ApiResponse.createDefaultSuccessResponse(
-                chatRoomService.create(form.name(), List.<String>of(form.memberCode(), memberDetails.code())));
+                chatRoomService.create(form.name(), List.<String>of(form.memberCode(), principal.getCode())));
     }
 
 }

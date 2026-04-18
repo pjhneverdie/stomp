@@ -25,12 +25,12 @@ public class OidcMemberService extends OidcUserService {
                 OidcUser oidcUser = super.loadUser(userRequest);
 
                 Member member = memberRepository.findByEmail(oidcUser.getEmail())
-                                .orElseGet(() -> memberRepository.save(Member.createMember(oidcUser.getEmail(),
+                                .orElseGet(() -> memberRepository.save(Member.createMember(
+                                                oidcUser.getEmail(),
                                                 oidcUser.getPicture(),
                                                 UUID.randomUUID().toString())));
 
-                return new OidcMemberPrincipal(member, oidcUser.getIdToken(),
-                                oidcUser.getUserInfo());
+                return new OidcMemberPrincipal(member, oidcUser.getIdToken(), oidcUser.getUserInfo());
         }
 
 }

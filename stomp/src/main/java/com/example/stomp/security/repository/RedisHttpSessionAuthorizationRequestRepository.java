@@ -14,14 +14,13 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class RedisOAuth2AuthorizationRequestRepository
+public class RedisHttpSessionAuthorizationRequestRepository
         implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
     private final RedisTemplate<String, OAuth2AuthorizationRequest> redisTemplate;
 
     @Override
     public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
         return redisTemplate.opsForValue().get(request.getParameter(OAuth2ParameterNames.STATE));
-        
     }
 
     @Override

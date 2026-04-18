@@ -1,7 +1,6 @@
 package com.example.stomp.security.repository;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,7 +37,7 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
 
     private final RedisTemplate<String, Object> redis;
 
-    public void saveContext2(SecurityContext context, HttpServletRequest request, HttpServletResponse response) {
+    public void saveContext(SecurityContext context, HttpServletRequest request, HttpServletResponse response) {
         /**
          * @formatter:off
          * 
@@ -57,7 +56,7 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
                 .filter(Authentication::isAuthenticated) // Make sure there are no negative specifics on authentication
                                                          // process.
                 .ifPresent(at -> {
-                    String sessionId = CookieUtil.getCookie(request)
+                    String sessionId = CookieUtil.getLoginCookie(request)
                             .map(Cookie::getValue)
                             .orElseGet(() -> UUID.randomUUID().toString()); // Create if absent.
 
@@ -80,23 +79,27 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
 
                             --[[
                                 1. See if a user already has session.
+                                We got secondary index for finding session by 'memberId'.
                             --]]
                             local memberIndexKey = KEYS[1] .. ARGV[1]
                             local oldSessionId = redis.call('GET', memberIndexKey)
 
-                            -- Initialize variable to store old roomId
+                            --[[
+                                2. If it is, we need to make user continue ongoing chat.
+                                Get the 'oldRoomId' field from the existing session and
+                                handover it to new session.
+                            --]]
                             local oldRoomId = nil
 
                             if oldSessionId then
-                                
+
                                 local oldSessionKey = KEYS[2] .. oldSessionId
                                 oldRoomId = redis.call('HGET', oldSessionKey, 'roomId')
 
-                                
+
                                 redis.call('DEL', oldSessionKey)
                             end
 
-                           
                             local newSessionKey = KEYS[2] .. ARGV[2]
                             redis.call('HMSET', newSessionKey,
                                 'memberId', ARGV[1],
@@ -105,19 +108,18 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
                                 'authorities', ARGV[4]
                             )
 
-                            
+                            --[[
+                                3. This is possible that there is no ongoing chat.
+                                In this case, all we have to do is just pass handovering.
+                            --]]
                             if oldRoomId then
                                 redis.call('HSET', newSessionKey, 'roomId', oldRoomId)
                             end
 
-                           
                             redis.call('EXPIRE', newSessionKey, KEYS[3])
-
-                           
                             redis.call('SET', memberIndexKey, ARGV[2])
                             redis.call('EXPIRE', memberIndexKey, KEYS[3])
 
-                            
                             return oldRoomId
                             """;
 
@@ -138,7 +140,6 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
                             pc.getCode(),
                             SecurityUtil.authoritiesToString(at.getAuthorities()));
 
-                    // WebSocket handover 이벤트 처리
                     if (oldRoomId != null) {
                         /**
                          * @formatter:off
@@ -156,119 +157,120 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
                     }
 
                     // 쿠키 설정
-                    CookieUtil.setCookie(sessionId, response);
+                    CookieUtil.setLoginCookie(sessionId, response);
                 });
     }
 
-    @Override
-    public void saveContext(SecurityContext context, HttpServletRequest request, HttpServletResponse response) {
-        /**
-         * @formatter:off
-         * 
-         * OAuth2LoginAuthenticationFilter(AbstractAuthenticationProcessingFilter) will call this method
-         * when login succeed.
-         * 
-         * On this step, we have two to do.
-         * 1. save the user's info in redis like session.
-         * 2. switch session if the user logins with another paths.
-         * 
-         * @formatter:on
-         */
-        Optional.ofNullable(context.getAuthentication())
-                .filter(Authentication::isAuthenticated)
-                .ifPresent(at -> {
-                    String sessionId = CookieUtil.getCookie(request)
-                            .map(Cookie::getValue)
-                            .orElseGet(() -> UUID.randomUUID().toString()); // Create it if absence.
+    // @Override
+    // public void saveContext(SecurityContext context, HttpServletRequest request,
+    // HttpServletResponse response) {
+    // /**
+    //      * @formatter:off
+    //      * 
+    //      * OAuth2LoginAuthenticationFilter(AbstractAuthenticationProcessingFilter) will call this method
+    //      * when login succeed.
+    //      * 
+    //      * On this step, we have two to do.
+    //      * 1. save the user's info in redis like session.
+    //      * 2. switch session if the user logins with another paths.
+    //      * 
+    //      * @formatter:on
+    // */
+    // Optional.ofNullable(context.getAuthentication())
+    // .filter(Authentication::isAuthenticated)
+    // .ifPresent(at -> {
+    // String sessionId = CookieUtil.getCookie(request)
+    // .map(Cookie::getValue)
+    // .orElseGet(() -> UUID.randomUUID().toString()); // Create it if absence.
 
-                    OidcMemberPrincipal pc = (OidcMemberPrincipal) at.getPrincipal();
+    // OidcMemberPrincipal pc = (OidcMemberPrincipal) at.getPrincipal();
 
-                    /**
-                     * @formatter:off
-                     * 
-                     * We got secondary index on the session so that we can find which session the user has.
-                     * If the user logins, check if he already has a session.
-                     * 
-                     * If it is, delete existing one and handover the roomId to new session making the user can track their ongoing chat.
-                     * 
-                     * @formatter:on
-                     */
-                    String oldRoomId = getOldSessionId(pc.getId())
-                            .flatMap(oldSessionId -> {
-                                Optional<String> roomIdOpt = getOldRoomId(oldSessionId);
+    // /**
+    //                  * @formatter:off
+    //                  * 
+    //                  * We got secondary index on the session so that we can find which session the user has.
+    //                  * If the user logins, check if he already has a session.
+    //                  * 
+    //                  * If it is, delete existing one and handover the roomId to new session making the user can track their ongoing chat.
+    //                  * 
+    //                  * @formatter:on
+    // */
+    // String oldRoomId = getOldSessionId(pc.getId())
+    // .flatMap(oldSessionId -> {
+    // Optional<String> roomIdOpt = getOldRoomId(oldSessionId);
 
-                                deleteOldSession(oldSessionId);
+    // deleteOldSession(oldSessionId);
 
-                                return roomIdOpt;
-                            })
-                            .orElse(null);
+    // return roomIdOpt;
+    // })
+    // .orElse(null);
 
-                    Map<String, String> hashFields = new HashMap<>(Map.of(
-                            SessionConstant.SESSION_MEMBER_ID_KEY, pc.getId(),
-                            SessionConstant.SESSION_SESSION_ID_KEY, sessionId,
-                            SessionConstant.SESSION_MEMBER_CODE_KEY, pc.getCode(),
-                            SessionConstant.SESSION_AUHTORITIES_KEY,
-                            SecurityUtil.authoritiesToString(at.getAuthorities())));
+    // Map<String, String> hashFields = new HashMap<>(Map.of(
+    // SessionConstant.SESSION_MEMBER_ID_KEY, pc.getId(),
+    // SessionConstant.SESSION_SESSION_ID_KEY, sessionId,
+    // SessionConstant.SESSION_MEMBER_CODE_KEY, pc.getCode(),
+    // SessionConstant.SESSION_AUHTORITIES_KEY,
+    // SecurityUtil.authoritiesToString(at.getAuthorities())));
 
-                    if (oldRoomId != null) {
-                        // Handover it.
-                        hashFields.put(SessionConstant.SESSION_ROOM_ID_KEY, oldRoomId);
+    // if (oldRoomId != null) {
+    // // Handover it.
+    // hashFields.put(SessionConstant.SESSION_ROOM_ID_KEY, oldRoomId);
 
-                        /**
-                         * @formatter:off
-                         * Our quest doesn't end. You know that WebSocket still remains regardless of deletion of HttpSession.
-                         * We should make it disconnected as well.
-                         * 
-                         * The problem is, in here, Since we got multiple servers, We can't be sure whether the server which the user requests for login 
-                         * is the server which manages the WebSocket connection of the user's previous device. 
-                         * 
-                         * For this reason, we have to publish an event to all of the servers in order to cut them off.
-                         * @formatter:on 
-                         */
+    // /**
+    //                      * @formatter:off
+    //                      * Our quest doesn't end. You know that WebSocket still remains regardless of deletion of HttpSession.
+    //                      * We should make it disconnected as well.
+    //                      * 
+    //                      * The problem is, in here, Since we got multiple servers, We can't be sure whether the server which the user requests for login 
+    //                      * is the server which manages the WebSocket connection of the user's previous device. 
+    //                      * 
+    //                      * For this reason, we have to publish an event to all of the servers in order to cut them off.
+    //                      * @formatter:on 
+    // */
 
-                        // ..... event realted codes...
-                    }
+    // // ..... event realted codes...
+    // }
 
-                    saveSession(sessionId, hashFields);
-                    createIndex(sessionId, pc.getId());
-                    CookieUtil.setCookie(sessionId, response);
-                });
-    }
+    // saveSession(sessionId, hashFields);
+    // createIndex(sessionId, pc.getId());
+    // CookieUtil.setCookie(sessionId, response);
+    // });
+    // }
 
-    private Optional<String> getOldSessionId(String memberId) {
-        return Optional
-                .ofNullable((String) redis.opsForValue()
-                        .getAndDelete(SessionConstant.MEMBER_SESSION_INDEX_PREFIX + memberId));
-    }
+    // private Optional<String> getOldSessionId(String memberId) {
+    // return Optional
+    // .ofNullable((String) redis.opsForValue()
+    // .getAndDelete(SessionConstant.MEMBER_SESSION_INDEX_PREFIX + memberId));
+    // }
 
-    private Optional<String> getOldRoomId(String oldSessionId) {
-        return Optional.ofNullable((String) redis.opsForHash()
-                .get(SessionConstant.SESSION_KEY_PREFIX + oldSessionId,
-                        SessionConstant.SESSION_ROOM_ID_KEY));
+    // private Optional<String> getOldRoomId(String oldSessionId) {
+    // return Optional.ofNullable((String) redis.opsForHash()
+    // .get(SessionConstant.SESSION_KEY_PREFIX + oldSessionId,
+    // SessionConstant.SESSION_ROOM_ID_KEY));
 
-    }
+    // }
 
-    private void deleteOldSession(String oldSessionId) {
-        redis.delete(SessionConstant.SESSION_KEY_PREFIX + oldSessionId);
-    }
+    // private void deleteOldSession(String oldSessionId) {
+    // redis.delete(SessionConstant.SESSION_KEY_PREFIX + oldSessionId);
+    // }
 
-    private void saveSession(String sessionId, Map<String, String> sessionMap) {
-        String key = SessionConstant.SESSION_KEY_PREFIX + sessionId;
+    // private void saveSession(String sessionId, Map<String, String> sessionMap) {
+    // String key = SessionConstant.SESSION_KEY_PREFIX + sessionId;
 
-        redis.opsForHash().putAll(key, sessionMap);
-        redis.expire(key, 1, TimeUnit.DAYS);
-    }
+    // redis.opsForHash().putAll(key, sessionMap);
+    // redis.expire(key, 1, TimeUnit.DAYS);
+    // }
 
-    private void createIndex(String sessionId, String memberId) {
-        String key = SessionConstant.MEMBER_SESSION_INDEX_PREFIX + memberId;
+    // private void createIndex(String sessionId, String memberId) {
+    // String key = SessionConstant.MEMBER_SESSION_INDEX_PREFIX + memberId;
 
-        redis.opsForValue().set(key, sessionId);
-        redis.expire(key, 1, TimeUnit.DAYS);
-    }
+    // redis.opsForValue().set(key, sessionId);
+    // redis.expire(key, 1, TimeUnit.DAYS);
+    // }
 
     @Override
     public boolean containsContext(HttpServletRequest request) {
-        return CookieUtil.getCookie(request)
+        return CookieUtil.getLoginCookie(request)
                 .map(Cookie::getValue)
                 .map(sessionId -> SessionConstant.SESSION_KEY_PREFIX + sessionId)
                 .map(sessionKey -> Boolean.TRUE.equals(redis.hasKey(sessionKey)))
@@ -277,33 +279,22 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
 
     @Override
     public DeferredSecurityContext loadDeferredContext(HttpServletRequest request) {
-        return new RedisHttpSessionSecurityDefferedContext(() -> CookieUtil.getCookie(request)
-                .map(cookie -> {
-                    Optional<SecurityContext> scOptional = readSecurityContextFromRedis(cookie.getValue());
-
-                    // Extend the Expiry of session.
-                    scOptional.ifPresent((sc) -> {
-                        extendExpiry(cookie.getValue(), sc.getAuthentication().getName());
-                    });
-
-                    // If sc is null, RedisHttpSessionSecurityDefferedContext will create it.
-                    return scOptional.orElse(null);
-                })
-                /**
-                 * @formatter:off
-                 * 
-                 * If cookie is null, return null supplier.
-                 * Then RedisHttpSessionSecurityDefferedContext will create empty SecurityContext.
-                 * 
-                 * @formatter:on
-                 */
-                .orElse(null),
+        return new RedisHttpSessionSecurityDefferedContext(
+                () -> CookieUtil.getLoginCookie(request)
+                        .map(Cookie::getValue)
+                        .flatMap(sessionId -> readSecurityContextFromRedis(sessionId)
+                                .map(sc -> {
+                                    extendExpiry(sessionId, sc.getAuthentication().getName());
+                                    return sc;
+                                }))
+                        // If cookie or session is missing, return null.
+                        // DeferredContext will handle null by creating an empty context.
+                        .orElse(null),
                 SecurityContextHolder.getContextHolderStrategy());
     }
 
     private Optional<SecurityContext> readSecurityContextFromRedis(String sessionId) {
-        Map<Object, Object> hashFileds = redis.opsForHash()
-                .entries(SessionConstant.SESSION_KEY_PREFIX + sessionId);
+        Map<Object, Object> hashFileds = redis.opsForHash().entries(SessionConstant.SESSION_KEY_PREFIX + sessionId);
 
         if (hashFileds.isEmpty())
             return Optional.empty();
@@ -320,7 +311,7 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
 
     private void extendExpiry(String sessionId, String memberId) {
         redis.expire(SessionConstant.SESSION_KEY_PREFIX + sessionId, 1, TimeUnit.DAYS);
-        redis.expire(SessionConstant.MEMBER_SESSION_INDEX_PREFIX + memberId, 1, TimeUnit.DAYS);
+        redis.expire(SessionConstant.MEMBER_SESSION_INDEX_KEY_PREFIX + memberId, 1, TimeUnit.DAYS);
     }
 
     // We are using over Security 6.0.
@@ -329,15 +320,9 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
         return loadDeferredContext(requestResponseHolder.getRequest()).get();
     }
 
-    /**
-     * @formatter:off
-     * 
-     * Slightly different version of SupplierDeferredSecurityContext used in SecurityContextRepository the library made.
-     * 
-     * @formatter:on
-     */
+    // Slightly different version of SupplierDeferredSecurityContext.
     @RequiredArgsConstructor
-    private static final class RedisHttpSessionSecurityDefferedContext implements DeferredSecurityContext {
+    private static class RedisHttpSessionSecurityDefferedContext implements DeferredSecurityContext {
 
         private final Supplier<SecurityContext> supplier;
 

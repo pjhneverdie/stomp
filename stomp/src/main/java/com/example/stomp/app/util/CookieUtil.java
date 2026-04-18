@@ -3,6 +3,7 @@ package com.example.stomp.app.util;
 import java.time.Duration;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.server.Cookie.SameSite;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -15,7 +16,10 @@ import jakarta.servlet.http.HttpServletResponse;
 
 public final class CookieUtil {
 
-    public static Optional<Cookie> getCookie(HttpServletRequest request) {
+    private CookieUtil() {
+    }
+
+    public static Optional<Cookie> getLoginCookie(HttpServletRequest request) {
         for (Cookie cookie : Optional.ofNullable(request.getCookies()).orElse(new Cookie[] {})) {
             if (SessionConstant.COOKIE_NAME.equals(cookie.getName())) {
                 return Optional.of(cookie);
@@ -25,7 +29,7 @@ public final class CookieUtil {
         return Optional.empty();
     }
 
-    public static void setCookie(String sessionId, HttpServletResponse response) {
+    public static void setLoginCookie(String sessionId, HttpServletResponse response) {
         ResponseCookie cookie = ResponseCookie.from(SessionConstant.COOKIE_NAME, sessionId)
                 .secure(true)
                 .httpOnly(true)

@@ -32,3 +32,4 @@ spring:
             issuer-uri: https://kauth.kakao.com
 
 frontend-origin: ${FRONTEND_ORIGIN}
+cookie-domain: ${COOKIE_DOMAIN}
