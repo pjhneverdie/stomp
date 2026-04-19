@@ -16,7 +16,7 @@ services:
     container_name: local-rabbitmq
     image: rabbitmq:4.2-management
     ports:
-      - "5672:5672"   # AMQP
+      - "5672:5672" # AMQP
       - "15672:15672" # Management Console
       - "61613:61613" # STOMP
     volumes:
@@ -26,11 +26,11 @@ services:
 
   redis:
     container_name: local-redis
-    image: redis/redis-stack:7.4.0-v8-x86_64
+    image: redis/redis-stack:7.4.0-v8
     ports:
-      - "6379:6379" 
+      - "6379:6379"
       - "8001:8001" # GUI
     volumes:
-      - ./config/local/redis/redis.conf:/usr/local/etc/redis/redis.conf
       - ./volume/local/redis/data:/data
-    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    environment:
+      - REDIS_ARGS=--requirepass localpass --maxmemory 512mb --maxmemory-policy noeviction --appendonly no --save 900 1 --save 300 10 --save 60 10000 # I couldn't find the way doing this as conf file.

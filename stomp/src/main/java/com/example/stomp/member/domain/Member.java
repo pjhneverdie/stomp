@@ -6,6 +6,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import com.example.stomp.app.domain.BaseEntity;
+import com.example.stomp.chat.domain.ChatRoomParticipant;
 import com.example.stomp.member.domain.enum_type.MemberRole;
 
 import jakarta.persistence.CascadeType;
@@ -25,14 +26,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member extends BaseEntity {
 
-    @Column(nullable = false, unique = true, length = 30)
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Column(nullable = false)
     private String picture;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 30)
+    @Column(nullable = false)
     private MemberRole role = MemberRole.FREE;
 
     @Column(nullable = false, unique = true, length = 36)
@@ -40,6 +41,9 @@ public class Member extends BaseEntity {
 
     @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private Credential credential;
+
+    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private ChatRoomParticipant participatedRoom;
 
     public void setCredential(Credential credential) {
         this.credential = credential;

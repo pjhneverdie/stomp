@@ -9,11 +9,13 @@ import com.example.stomp.member.domain.Member;
 import lombok.Getter;
 
 // OidcAuthorizationCodeAuthenticationProvider will set this as Principal.
+// This is used temporarily between when login succeed and making session.
 @Getter
 public class OidcMemberPrincipal extends DefaultOidcUser {
 
     private final String id;
     private final String code;
+    private final String roomId;
 
     public OidcMemberPrincipal(
             Member member,
@@ -23,6 +25,9 @@ public class OidcMemberPrincipal extends DefaultOidcUser {
         super(member.getAuthorities(), idToken, userInfo);
         this.id = String.valueOf(member.getId());
         this.code = member.getCode();
+        this.roomId = (member.getParticipatedRoom() != null)
+                ? String.valueOf(member.getParticipatedRoom().getId())
+                : null;
     }
 
 }

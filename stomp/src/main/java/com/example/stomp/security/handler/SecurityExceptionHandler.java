@@ -22,7 +22,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
-// 내일 디버깅하면서 이거 제대로 손보기.
 @Component
 @RequiredArgsConstructor
 public class SecurityExceptionHandler
@@ -60,7 +59,7 @@ public class SecurityExceptionHandler
         AppException appException = new AppException(new ExceptionInfo() {
             @Override
             public HttpStatus getHttpStatus() {
-                return HttpStatus.BAD_REQUEST;
+                return status;
             }
 
             @Override

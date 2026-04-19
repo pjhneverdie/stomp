@@ -14,6 +14,7 @@ import org.springframework.security.core.context.DeferredSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextHolderStrategy;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.security.web.context.HttpRequestResponseHolder;
 
 import org.springframework.security.web.context.SecurityContextRepository;
@@ -62,85 +63,83 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
 
                     OidcMemberPrincipal pc = (OidcMemberPrincipal) at.getPrincipal();
 
+                    String participatedRoomId = pc.getRoomId();
+
+                    /**
+                     * @formatter:off
+                     * 
+                     * If a user logined, but there is ongoing chat, this usually means a device was switched.
+                     * Or it is possible as well that a user cleared brower caches.
+                     * 
+                     * ANYWAY, we have a response to make user can continue the chat. Save the 'roomId' in session. 
+                     * 
+                     * @formatter:on
+                     */
                     String luaScript = """
-                            --[[
-                                This Lua script manages user session swtiching.
-                                It ensures that even if multiple login requests occur simultaneously, no race conditions happen.
-                            --]]
+                                --[[
+                                    I wondered if any user would actually attempt simultaneous login try.
 
-                            -- KEYS[1] : MEMBER_SESSION_INDEX_KEY_PREFIX
-                            -- KEYS[2] : SESSION_KEY_PREFIX
-                            -- KEYS[3] : session expiration in seconds
+                                    Trying to cover every possiblescenario would make the app's complexity spiral out of control.
 
-                            -- ARGV[1] : memberId
-                            -- ARGV[2] : newSessionId
-                            -- ARGV[3] : memberCode
-                            -- ARGV[4] : authorities (comma separated)
+                                    However, I’ve decided to push the level of detail as far as I can personally handle. Let's go.
+                                --]]
+                                -- KEYS[1] : MEMBER_SESSION_INDEX_KEY_PREFIX
+                                -- KEYS[2] : SESSION_KEY_PREFIX
+                                -- KEYS[3] : session expiration in seconds
 
-                            --[[
-                                1. See if a user already has session.
-                                We got secondary index for finding session by 'memberId'.
-                            --]]
-                            local memberIndexKey = KEYS[1] .. ARGV[1]
-                            local oldSessionId = redis.call('GET', memberIndexKey)
+                                -- ARGV[1] : newSessionId
+                                -- ARGV[2] : memberId
+                                -- ARGV[3] : memberCode
+                                -- ARGV[4] : authorities
+                                -- ARGV[5] : roomId (nullable)
 
-                            --[[
-                                2. If it is, we need to make user continue ongoing chat.
-                                Get the 'oldRoomId' field from the existing session and
-                                handover it to new session.
-                            --]]
-                            local oldRoomId = nil
+                                -- 1. delete previous session to comply one session policy.
+                                local memberIndexKey = KEYS[1] .. ARGV[2]
+                                local oldSessionId = redis.call('GET', memberIndexKey)
 
-                            if oldSessionId then
+                                if oldSessionId then
+                                    local oldSessionKey = KEYS[2] .. oldSessionId
+                                    redis.call('DEL', oldSessionKey)
+                                end
 
-                                local oldSessionKey = KEYS[2] .. oldSessionId
-                                oldRoomId = redis.call('HGET', oldSessionKey, 'roomId')
+                                -- 2. make the new session.
+                                local newSessionKey = KEYS[2] .. ARGV[1]
+                                redis.call('HMSET', newSessionKey,
+                                    'memberId', ARGV[2],
+                                    'sessionId', ARGV[1],
+                                    'memberCode', ARGV[3],
+                                    'authorities', ARGV[4]
+                                )
 
+                                -- 3. add roomId field if exists.
+                                if ARGV[5] and ARGV[5] ~= "" then
+                                    redis.call('HSET', newSessionKey, 'roomId', ARGV[5])
+                                end
 
-                                redis.call('DEL', oldSessionKey)
-                            end
+                                -- 4. update the index and expiry.
+                                redis.call('EXPIRE', newSessionKey, KEYS[3])
+                                redis.call('SET', memberIndexKey, ARGV[1])
+                                redis.call('EXPIRE', memberIndexKey, KEYS[3])
 
-                            local newSessionKey = KEYS[2] .. ARGV[2]
-                            redis.call('HMSET', newSessionKey,
-                                'memberId', ARGV[1],
-                                'sessionId', ARGV[2],
-                                'memberCode', ARGV[3],
-                                'authorities', ARGV[4]
-                            )
-
-                            --[[
-                                3. This is possible that there is no ongoing chat.
-                                In this case, all we have to do is just pass handovering.
-                            --]]
-                            if oldRoomId then
-                                redis.call('HSET', newSessionKey, 'roomId', oldRoomId)
-                            end
-
-                            redis.call('EXPIRE', newSessionKey, KEYS[3])
-                            redis.call('SET', memberIndexKey, ARGV[2])
-                            redis.call('EXPIRE', memberIndexKey, KEYS[3])
-
-                            return oldRoomId
+                                return;
                             """;
 
                     DefaultRedisScript<String> redisScript = new DefaultRedisScript<>();
                     redisScript.setScriptText(luaScript);
-                    redisScript.setResultType(String.class);
 
-                    int expireSeconds = (int) TimeUnit.DAYS.toSeconds(1);
-
-                    String oldRoomId = redis.execute(
+                    redis.execute(
                             redisScript,
                             Arrays.asList(
                                     SessionConstant.MEMBER_SESSION_INDEX_KEY_PREFIX,
                                     SessionConstant.SESSION_KEY_PREFIX,
-                                    String.valueOf(expireSeconds)),
-                            pc.getId(),
+                                    String.valueOf(TimeUnit.DAYS.toSeconds(SessionConstant.SESSION_VALID_DAYS))),
                             sessionId,
+                            pc.getId(),
                             pc.getCode(),
-                            SecurityUtil.authoritiesToString(at.getAuthorities()));
+                            SecurityUtil.authoritiesToString(at.getAuthorities()),
+                            participatedRoomId != null ? participatedRoomId : "");
 
-                    if (oldRoomId != null) {
+                    if (participatedRoomId != null) {
                         /**
                          * @formatter:off
                          * Our quest doesn't end. You know that WebSocket still remains regardless of deletion of HttpSession.
@@ -156,7 +155,6 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
                         // ..... event realted codes...
                     }
 
-                    // 쿠키 설정
                     CookieUtil.setLoginCookie(sessionId, response);
                 });
     }

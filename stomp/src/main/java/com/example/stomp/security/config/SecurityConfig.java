@@ -21,7 +21,7 @@ import com.example.stomp.security.repository.RedisHttpSessionAuthorizationReques
 import lombok.RequiredArgsConstructor;
 
 @Configuration
-@EnableWebSecurity
+@EnableWebSecurity(debug = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -41,7 +41,7 @@ public class SecurityConfig {
 
                 http
                                 .authorizeHttpRequests(auth -> auth
-                                                .requestMatchers("/").permitAll()
+                                                .requestMatchers("/", "/favicon.ico").permitAll()
                                                 .anyRequest().authenticated());
 
                 http

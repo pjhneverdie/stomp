@@ -4,3 +4,4 @@ spring:
       port: 6379
       host: localhost
       password: localpass
+      
