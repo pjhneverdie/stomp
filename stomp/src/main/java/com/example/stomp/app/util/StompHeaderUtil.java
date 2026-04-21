@@ -4,7 +4,7 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.util.Assert;
 
-import com.example.stomp.app.infra.websocket.WsPrincipal;
+import com.example.stomp.app.infra.websocket.WsMemberPrincipal;
 
 public final class StompHeaderUtil {
 
@@ -13,8 +13,8 @@ public final class StompHeaderUtil {
 
 
 
-    public static WsPrincipal getPrincipal(StompHeaderAccessor accessor) {
-        return (WsPrincipal) accessor.getUser();
+    public static WsMemberPrincipal getPrincipal(StompHeaderAccessor accessor) {
+        return (WsMemberPrincipal) accessor.getUser();
     }
 
 }

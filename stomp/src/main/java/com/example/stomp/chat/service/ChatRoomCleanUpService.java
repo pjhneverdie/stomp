@@ -4,26 +4,30 @@ import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 
-import com.example.stomp.app.infra.websocket.WsPrincipal;
+import com.example.stomp.app.infra.websocket.WsMemberPrincipal;
 import com.example.stomp.app.util.StompHeaderUtil;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class ChatRoomCleanUpService {
+
+    private final ChatRoomService chatRoomService;
 
     @EventListener
     public void handleWebSocketConnectedListener(SessionSubscribeEvent event) {
-        // 내일 구독 시에 목적지 얻을 수 있는지 확인하기.
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(event.getMessage(), StompHeaderAccessor.class);
-        WsPrincipal wsPrincipal = StompHeaderUtil.getPrincipal(accessor);
-        System.out.println(accessor.getDestination());
+        WsMemberPrincipal wsPrincipal = StompHeaderUtil.getPrincipal(accessor);
 
+        // boolean isReconnect = wsPrincipal.getRoomId() != null;
+
+        // chatRoomService.participate(accessor.getDestination(), wsPrincipal.getMemberId(), isReconnect);
     }
 
     @EventListener

@@ -13,7 +13,7 @@ import lombok.Setter;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
-public class WsPrincipal implements Principal {
+public class WsMemberPrincipal implements Principal {
 
     private String memberId;
 
@@ -24,8 +24,8 @@ public class WsPrincipal implements Principal {
 
     private String httpSessionId;
 
-    public static WsPrincipal create(RedisHttpSessionMemberPrincipal memberDetails) {
-        return new WsPrincipal(memberDetails.getId(), memberDetails.getCode(), memberDetails.getRoomId(),
+    public static WsMemberPrincipal create(RedisHttpSessionMemberPrincipal memberDetails) {
+        return new WsMemberPrincipal(memberDetails.getId(), memberDetails.getCode(), memberDetails.getRoomId(),
                 memberDetails.getSessionId());
     }
 

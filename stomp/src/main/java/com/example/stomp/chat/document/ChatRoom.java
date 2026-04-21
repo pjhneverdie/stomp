@@ -2,7 +2,6 @@ package com.example.stomp.chat.document;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.util.Assert;
@@ -10,7 +9,6 @@ import org.springframework.util.Assert;
 import com.example.stomp.app.dto.exception.AppException;
 import com.example.stomp.chat.document.enum_type.ChatChapter;
 import com.example.stomp.chat.document.enum_type.NetworkStatus;
-import com.example.stomp.chat.dto.JoinType;
 import com.example.stomp.chat.dto.exception.ChatExceptions;
 import com.redis.om.spring.annotations.Document;
 

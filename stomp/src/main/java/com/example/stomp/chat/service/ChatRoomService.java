@@ -1,40 +1,30 @@
 package com.example.stomp.chat.service;
 
-import java.io.InvalidObjectException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
 
-import com.example.stomp.app.constant.SessionConstant;
 import com.example.stomp.app.dto.exception.AppException;
 import com.example.stomp.chat.document.ChatMember;
 import com.example.stomp.chat.document.ChatRoom;
 import com.example.stomp.chat.document.enum_type.NetworkStatus;
 import com.example.stomp.chat.dto.exception.ChatExceptions;
 import com.example.stomp.chat.repository.ChatRoomRepository;
-import com.example.stomp.security.dto.RedisHttpSessionAuthenticationToken;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.redis.om.spring.search.stream.EntityStream;
+
+import com.redis.om.spring.ops.RedisModulesOperations;
 
 import lombok.RequiredArgsConstructor;
+
+import redis.clients.jedis.json.Path2;
 
 @Service
 @RequiredArgsConstructor
 public class ChatRoomService {
 
     private final RedisTemplate<String, Object> redis;
-    private final EntityStream entityStream;
+    private final RedisModulesOperations<String> chatOps;
     private final ChatRoomRepository chatRoomRepository;
 
     public static final String CHATROOM_PRESENCE_KEY_PREFIX = "chatRoom:%s:presence:%s";
@@ -49,45 +39,18 @@ public class ChatRoomService {
         });
     }
 
-    public void comeIn(String roomId, String memberId, String memberCode) throws Exception {
-        // ChatMember chatMember = ChatMember.create(roomId, memberCode);
-        // entityStream.of(ChatRoom.class)
-        //         .filter(ChatRoom$.ID.eq(roomId)) // ChatRoom$는 자동 생성되는 메타 모델
-        //         .forEach(room -> {
-        //             repository.save(room);
-        //         });
+    public void participate(String roomId, String memberId, boolean isReconnect) {
+        if (isReconnect) {
+            Path2 path = Path2.of(String.format("$.chatMembers[?(@.id == '%s')].networkStatus", memberId));
 
-        // Map<Object, Object> chatroom = redis.opsForHash().entries(CHATROOM_KEY_PREFIX
-        // + roomId);
+            chatOps.opsForJSON().set(roomId, NetworkStatus.CONNECTED, path);
 
-        // if (chatroom != null) {
-        // String codes = (String) chatroom.get(CHATROOM_PASS_CODES_KEY);
-        // List<String> codeList = objectMapper.readValue(codes, new
-        // TypeReference<List<String>>() {
-        // });
+            return;
+        }
 
-        // if (codeList.contains(code)) {
+        Path2 path = Path2.of("$.chatMembers");
 
-        // String sessionId2 = (String) redis.opsForValue().get("chatroom:" + roomId +
-        // ":presence:" + memberId);
-
-        // if (sessionId2 != null) {
-        // // 다중 창 접속임 나중에 처리
-
-        // } else {
-        // redis.opsForValue().set("chatroom:" + roomId + ":presence:" + memberId,
-        // sessionId);
-
-        // // save that he has a chat for preventing him from reckless creation
-        // // once the chat ends, it should be replaced as null
-        // redis.opsForHash().put(SessionConstant.SESSION_KEY_PREFIX + sessionId,
-        // SessionConstant.SESSION_ROOM_ID_KEY,
-        // roomId);
-        // }
-        // }
-        // } else {
-        // }
-
+        chatOps.opsForJSON().arrAppend(roomId, path, ChatMember.create(memberId, "NICK"));
     }
 
 }

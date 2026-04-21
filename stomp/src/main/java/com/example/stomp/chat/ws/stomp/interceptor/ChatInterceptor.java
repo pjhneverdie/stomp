@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
@@ -12,12 +13,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.StompSubProtocolHandler;
 
 import com.example.stomp.app.dto.exception.AppException;
-import com.example.stomp.app.infra.websocket.WsPrincipal;
+import com.example.stomp.app.infra.websocket.WsMemberPrincipal;
 import com.example.stomp.app.util.StompHeaderUtil;
 import com.example.stomp.chat.document.ChatRoom;
-import com.example.stomp.chat.dto.JoinType;
 import com.example.stomp.chat.dto.exception.ChatExceptions;
 import com.example.stomp.chat.service.ChatRoomService;
+import com.redis.om.spring.ops.RedisModulesOperations;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,14 +47,13 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @RequiredArgsConstructor
 public class ChatInterceptor implements ChannelInterceptor {
-    private final ChatRoomService chatRoomService;
 
-    private final static String ROOM_ID_HEADER_KEY = "roomId";
+    private final ChatRoomService chatRoomService;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-        WsPrincipal wsPrincipal = StompHeaderUtil.getPrincipal(accessor);
+        WsMemberPrincipal wsPrincipal = StompHeaderUtil.getPrincipal(accessor);
 
         // This is just a heartbeat.
         if (accessor.getCommand() == null) {
@@ -62,15 +62,33 @@ public class ChatInterceptor implements ChannelInterceptor {
 
         switch (accessor.getCommand()) {
             case CONNECT: {
-                // 1. See If chatroom exists.
-                ChatRoom chatRoom = chatRoomService.orElseThrow(ROOM_ID_HEADER_KEY);
+                Optional.ofNullable(wsPrincipal.getRoomId()).ifPresent((roomId) -> {
+                    ChatRoom chatRoom = chatRoomService.orElseThrow(roomId);
 
-                // 2. If it is, validate if they have a right to join.
-                chatRoom.validatePassCode(wsPrincipal.getMemberCode());
+                    /**
+                     * @formatter:off
+                     * 
+                     * 1. Check if a user owns pass code.
+                     * 2. Check if a user owns only one connection.
+                     * 
+                     * @formatter:on
+                     */
+                    chatRoom.validatePassCode(wsPrincipal.getMemberCode());
+                    chatRoom.validateConnection(wsPrincipal.getMemberId());
+                });
             }
+                break;
 
             case SUBSCRIBE:
-                
+                Boolean isReconnect = wsPrincipal.getRoomId() != null;
+
+                log.debug("구독 중");
+                log.debug(accessor.getDestination());
+                log.debug(isReconnect.toString());
+                log.debug("구독 중");
+
+                // chatRoomService.participate(accessor.getDestination(),
+                // wsPrincipal.getMemberId(), isReconnect);
 
                 break;
             case SEND:
@@ -83,6 +101,25 @@ public class ChatInterceptor implements ChannelInterceptor {
         }
 
         return message;
+    }
+
+    @Override
+    public void afterSendCompletion(Message<?> message, MessageChannel channel, boolean sent, Exception ex) {
+        StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+
+        if (ex != null) {
+            log.debug("pre sub은 성공했는데 실제 구독 중에 문제가 발생했어.;");
+            StompCommand command = accessor.getCommand();
+
+            if (StompCommand.SUBSCRIBE.equals(command)) {
+                WsMemberPrincipal principal = StompHeaderUtil.getPrincipal(accessor);
+                log.error("SUBSCRIBE 처리 중 에러 발생! 멤버 상태를 복구합니다. memberId: {}", principal.getMemberId());
+
+                // // 예: Redis에서 해당 멤버의 상태를 다시 DISCONNECTED로 변경하거나 제거
+                // chatRoomService.rollbackParticipation(accessor.getDestination(),
+                // principal.getMemberId());
+            }
+        }
     }
 
 }
