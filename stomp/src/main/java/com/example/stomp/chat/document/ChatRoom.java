@@ -34,7 +34,7 @@ public class ChatRoom {
 
     private ChatChapter chapter;
 
-    public static ChatRoom create(String id, String name, List<String> passCodes) {
+    public static ChatRoom create(String id, String name, List<String> passCodes) { 
         return new ChatRoom(
                 id,
                 name,

@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.stomp.app.dto.ApiResponse;
 import com.example.stomp.chat.dto.form.ChatRoomForm;
-import com.example.stomp.chat.service.ChatRoomService;
+import com.example.stomp.chat.service.ChatService;
 import com.example.stomp.security.dto.RedisHttpSessionMemberPrincipal;
 
 import lombok.RequiredArgsConstructor;
@@ -19,9 +19,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RestController
 @RequestMapping("/chat")
 @RequiredArgsConstructor
-public class ChatRoomController {
+public class ChatController {
 
-    private ChatRoomService chatRoomService;
+    private ChatService chatRoomService;
 
     @PostMapping("/create")
     public ApiResponse<String> create(@RequestBody ChatRoomForm.Create form,

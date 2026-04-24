@@ -9,7 +9,8 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 import com.example.stomp.app.infra.rabbitmq.config.RabbitMQProperties;
 import com.example.stomp.app.infra.websocket.handshake.SecurityContextIntegrationHandShakeHandler;
-import com.example.stomp.chat.ws.stomp.interceptor.ChatInterceptor;
+import com.example.stomp.chat.ws.stomp.interceptor.ChatConnectionInterceptor;
+import com.example.stomp.chat.ws.stomp.interceptor.ChatSubscriptionInterceptor;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,7 +21,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final RabbitMQProperties rabbitMQProperties;
     private final SecurityContextIntegrationHandShakeHandler handShakeHandler;
-    private final ChatInterceptor chatInterceptor;
+    private final ChatConnectionInterceptor chatConnectionInterceptor;
+    private final ChatSubscriptionInterceptor chatSubscriptionInterceptor;
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
@@ -45,7 +47,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(chatInterceptor);
+        registration.interceptors(chatConnectionInterceptor);
+    }
+
+    @Override
+    public void configureClientOutboundChannel(ChannelRegistration registration) {
+        registration.interceptors(chatSubscriptionInterceptor);
     }
 
 }

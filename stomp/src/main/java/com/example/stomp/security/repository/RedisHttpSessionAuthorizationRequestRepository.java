@@ -10,23 +10,24 @@ import org.springframework.stereotype.Component;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
 public class RedisHttpSessionAuthorizationRequestRepository
         implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
-    private final RedisTemplate<String, OAuth2AuthorizationRequest> redisTemplate;
+    private final RedisTemplate<String, OAuth2AuthorizationRequest> reids;
 
     @Override
     public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
-        return redisTemplate.opsForValue().get(request.getParameter(OAuth2ParameterNames.STATE));
+        return reids.opsForValue().get(request.getParameter(OAuth2ParameterNames.STATE));
     }
 
     @Override
     public void saveAuthorizationRequest(OAuth2AuthorizationRequest authorizationRequest, HttpServletRequest request,
             HttpServletResponse response) {
-        redisTemplate.opsForValue().set(authorizationRequest.getState(), authorizationRequest,
+        reids.opsForValue().set(authorizationRequest.getState(), authorizationRequest,
                 Duration.ofSeconds(60));
     }
 
@@ -35,10 +36,10 @@ public class RedisHttpSessionAuthorizationRequestRepository
             HttpServletResponse response) {
         String state = request.getParameter(OAuth2ParameterNames.STATE);
 
-        OAuth2AuthorizationRequest authRequest = redisTemplate.opsForValue().get(state);
+        OAuth2AuthorizationRequest authRequest = reids.opsForValue().get(state);
 
         if (state != null) {
-            redisTemplate.delete(state);
+            reids.delete(state);
         }
 
         return authRequest;

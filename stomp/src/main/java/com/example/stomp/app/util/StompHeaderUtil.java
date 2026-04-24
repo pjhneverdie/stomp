@@ -11,8 +11,6 @@ public final class StompHeaderUtil {
     private StompHeaderUtil() {
     }
 
-
-
     public static WsMemberPrincipal getPrincipal(StompHeaderAccessor accessor) {
         return (WsMemberPrincipal) accessor.getUser();
     }

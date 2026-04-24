@@ -7,7 +7,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.DeferredSecurityContext;
@@ -15,7 +15,6 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.web.context.HttpRequestResponseHolder;
-import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Component;
 
@@ -35,7 +34,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RedisHttpSessionContextRepository implements SecurityContextRepository {
 
-    private final RedisTemplate<String, Object> redis;
+    private final StringRedisTemplate redis;
 
     @Override
     public boolean containsContext(HttpServletRequest request) {
@@ -167,13 +166,11 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
 
     @Override
     public DeferredSecurityContext loadDeferredContext(HttpServletRequest request) {
-        System.out.println("실행은했어");
         return new RedisHttpSessionSecurityDefferedContext(
                 () -> {
                     Optional<Cookie> cookieOpt = CookieUtil.getLoginCookie(request);
 
                     if (cookieOpt.isEmpty()) {
-                        System.out.println("없어요;");
                         return null;
                     }
 
@@ -196,16 +193,11 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
     }
 
     private Optional<SecurityContext> readSecurityContextFromRedis(String sessionId) {
-        String d = SessionConstant.SESSION_KEY_PREFIX + sessionId;
-    
-        // "" 이슈
-        // null 아니라 "" 이슈
         Map<Object, Object> hashFileds = redis.opsForHash().entries(SessionConstant.SESSION_KEY_PREFIX + sessionId);
 
         if (hashFileds.isEmpty())
             return Optional.empty();
 
-        System.out.println("있어요;");
         SecurityContext sc = SecurityContextHolder.getContextHolderStrategy().createEmptyContext();
 
         RedisHttpSessionAuthenticationToken at = new RedisHttpSessionAuthenticationToken(

@@ -1,6 +1,6 @@
 package com.example.stomp.security.handler;
 
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Component;
@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RedisHttpSessionLogoutHandler implements LogoutHandler {
 
-    private final RedisTemplate<String, Object> redis;
+    private final StringRedisTemplate redis;
 
     @Override
     public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {

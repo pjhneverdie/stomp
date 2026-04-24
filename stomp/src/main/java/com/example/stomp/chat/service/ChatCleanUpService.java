@@ -16,19 +16,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ChatRoomCleanUpService {
+public class ChatCleanUpService {
 
-    private final ChatRoomService chatRoomService;
+    private final ChatService chatRoomService;
 
-    @EventListener
-    public void handleWebSocketConnectedListener(SessionSubscribeEvent event) {
-        StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(event.getMessage(), StompHeaderAccessor.class);
-        WsMemberPrincipal wsPrincipal = StompHeaderUtil.getPrincipal(accessor);
-
-        // boolean isReconnect = wsPrincipal.getRoomId() != null;
-
-        // chatRoomService.participate(accessor.getDestination(), wsPrincipal.getMemberId(), isReconnect);
-    }
 
     @EventListener
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
