@@ -15,4 +15,8 @@ public final class StompHeaderUtil {
         return (WsMemberPrincipal) accessor.getUser();
     }
 
+    public static String getNickname(StompHeaderAccessor accessor) {
+        return (String) accessor.getHeader("nickname");
+    }
+
 }

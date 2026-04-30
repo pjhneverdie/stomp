@@ -1,6 +1,5 @@
 package com.example.stomp.chat.repository;
 
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import com.example.stomp.chat.document.ChatRoom;

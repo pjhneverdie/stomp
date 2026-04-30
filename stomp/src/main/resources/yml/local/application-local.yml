@@ -1,0 +1,15 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+    import:
+      - optional:classpath:/yml/local/application-local-mysql.yml
+      - optional:classpath:/yml/local/application-local-login.yml
+      - optional:classpath:/yml/local/application-local-redis.yml
+      - optional:classpath:/yml/local/application-local-rabbitmq.yml
+
+  docker:
+    compose:
+      enabled: true
+      lifecycle-management: start-and-stop
+      file: /workspaces/stomp/docker/docker-compose-local.yml 

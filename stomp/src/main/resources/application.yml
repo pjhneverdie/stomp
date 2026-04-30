@@ -2,7 +2,7 @@ spring:
   profiles:
     active: local
   config:
-    import: "optional:classpath:/${spring.profiles.active}/yml/application-${spring.profiles.active}.yml"
+    import: "optional:classpath:/yml/${spring.profiles.active}/application-${spring.profiles.active}.yml"
 
 logging:
   level:

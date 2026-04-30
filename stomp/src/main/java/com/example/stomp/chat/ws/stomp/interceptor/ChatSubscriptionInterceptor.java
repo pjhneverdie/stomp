@@ -35,9 +35,14 @@ public class ChatSubscriptionInterceptor implements ChannelInterceptor {
             case RECEIPT: {
 
                 Boolean isReconnect = wsPrincipal.getRoomId() != null;
+                String nickname = null;
+
+                if (!isReconnect) {
+                    nickname = (String) accessor.getHeader("nickname");
+                }
 
                 chatRoomService.participate(accessor.getReceiptId(),
-                        wsPrincipal.getMemberId(), isReconnect);
+                        wsPrincipal.getMemberId(), nickname, isReconnect);
 
             }
                 break;

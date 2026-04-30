@@ -29,6 +29,9 @@ public class ChatService {
 
     public String create(String name, List<String> passCodes) {
 
+        // 채팅방 생성하고
+        // chatMembers까지 다 미리 쳐 넣어 놔.
+        // 그리고 나가면 아예 그 멤버에 TTL을 걸어버려
         return chatRoomRepository.save(ChatRoom.create(UUID.randomUUID().toString(), name, passCodes)).getId();
 
     }
@@ -41,7 +44,7 @@ public class ChatService {
 
     }
 
-    public void participate(String roomId, String memberId, boolean isReconnect) {
+    public void participate(String roomId, String memberId, String nickname, boolean isReconnect) {
 
         if (isReconnect) {
             Path2 path = Path2.of(String.format("$.chatMembers[?(@.id == '%s')].networkStatus", memberId));
@@ -55,8 +58,7 @@ public class ChatService {
 
         Path2 path = Path2.of("$.chatMembers");
 
-        chatOps.opsForJSON().arrAppend(roomId, path, ChatMember.create(memberId, "NICK"));
-
+        chatOps.opsForJSON().arrAppend(roomId, path, ChatMember.create(memberId, nickname));
     }
 
 }
