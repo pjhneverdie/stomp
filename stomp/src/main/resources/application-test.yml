@@ -1,0 +1,12 @@
+spring:
+  config:
+    import:
+      - optional:classpath:/yml/test/application-test-login.yml
+      - optional:classpath:/yml/test/application-test-mysql.yml
+      - optional:classpath:/yml/test/application-test-rabbitmq.yml
+      - optional:classpath:/yml/test/application-test-redis.yml
+
+logging:
+  level:
+    root: DEBUG
+    org.springframework.web: DEBUG

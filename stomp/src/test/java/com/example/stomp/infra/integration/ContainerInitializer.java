@@ -33,20 +33,20 @@ public class ContainerInitializer
                 }
 
                 TestPropertyValues.of(
-                                // MySQL.
                                 "spring.datasource.url=" + MYSQL.getJdbcUrl(),
                                 "spring.datasource.username=" + MYSQL.getUsername(),
                                 "spring.datasource.password=" + MYSQL.getPassword(),
 
-                                // Redis.
                                 "spring.data.redis.host=" + REDIS.getHost(),
                                 "spring.data.redis.port=" + REDIS.getMappedPort(6379),
 
-                                // RabbitMQ.
                                 "spring.rabbitmq.host=" + RABBIT.getHost(),
                                 "spring.rabbitmq.port=" + RABBIT.getAmqpPort(),
                                 "spring.rabbitmq.username=" + RABBIT.getAdminUsername(),
-                                "spring.rabbitmq.password=" + RABBIT.getAdminPassword())
+                                "spring.rabbitmq.password=" + RABBIT.getAdminPassword(),
+                                "spring.rabbitmq.stomp.port=" + 61613
+
+                )
                                 .applyTo(context.getEnvironment());
         }
 

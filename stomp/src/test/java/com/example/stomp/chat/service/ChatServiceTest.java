@@ -5,25 +5,32 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.example.stomp.DockerSpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.test.context.ContextConfiguration;
 
-@DockerSpringBootTest
+import com.example.stomp.infra.redis.SlicedRedisSetUp;
+
+@SlicedRedisSetUp
+@ContextConfiguration(classes = { ChatService.class })
 public class ChatServiceTest {
 
     @Autowired
     private ChatService chatService;
 
-    @Test
-    void dd() {
+    @TestConfiguration
+    static class TesstConfig {
+        @Bean
+        public com.google.gson.Gson gson() {
+            return new com.google.gson.Gson();
+        }
     }
 
     @Test
-    void testCreate() {
-        String id = chatService.create("123", List.of("adsasd", "dsadsa"));
+    void testCreate() throws InterruptedException {
+        String id = chatService.create("123", List.of("abcd", "efg"));
 
-        System.out.println(id);
-        System.out.println(id);
-        System.out.println(id);
+        chatService.participate("chatRoom:" + id, "1", "nickname", false);
 
     }
 
