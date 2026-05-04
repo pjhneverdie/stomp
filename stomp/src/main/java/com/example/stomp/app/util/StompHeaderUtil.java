@@ -19,4 +19,5 @@ public final class StompHeaderUtil {
         return (String) accessor.getHeader("nickname");
     }
 
+
 }

@@ -26,8 +26,9 @@ public class WebSocketSessionManager {
     public void handleSessionTerminate(SessionSwitchedEvent event) {
         SimpUser user = userRegistry.getUser(event.memberId());
 
-        if (user != null) {
+        if (user.hasSessions()) {
             user.getSessions().forEach(session -> {
+                user.getPrincipal(); // 여기서 sessionId vs oldSessionId 검증
                 /**
                  * 유저가 다른 기기로 로그인 했을 때 서버 측 대응
                  * 1. 기존 세션을 redis에서 지운다 -> 유저가 기존 기기에서 다시 로그인 해서 않는 이상 기존 유저 재연결 불가. 만약 기존 기기에서
@@ -39,7 +40,7 @@ public class WebSocketSessionManager {
                  * 2. 이건 웹소켓 세션에 에러 프레임 발송해서 기존 연결을 강제로 끊어 버리면 됨
                  */
                 String errorMessage = "Multiple login detected. This session is terminated.";
-
+                
                 // 헤더 설정 (중요: ERROR 프레임으로 인식되게 함)
                 StompHeaderAccessor accessor = StompHeaderAccessor.create(StompCommand.ERROR);
                 accessor.setMessage("Multiple login detected.");
@@ -51,7 +52,6 @@ public class WebSocketSessionManager {
                         "/queue/errors",
                         errorMessage,
                         accessor.getMessageHeaders());
-
             });
         }
     }

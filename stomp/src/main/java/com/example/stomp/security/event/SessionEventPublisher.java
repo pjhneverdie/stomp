@@ -20,4 +20,5 @@ public class SessionEventPublisher {
     public void handleSessionSwitched(SessionSwitchedEvent event) {
         rabbitTemplate.convertAndSend(EXCHANGE_NAME, "", event);
     }
+
 }

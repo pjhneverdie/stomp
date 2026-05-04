@@ -10,7 +10,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.CookieClearingLogoutHandler;
 
 import com.example.stomp.app.constant.SessionConstant;
-import com.example.stomp.member.service.OidcMemberService;
+import com.example.stomp.member.service.MemberService;
 import com.example.stomp.security.handler.OicdLoginSuccessHandler;
 import com.example.stomp.security.handler.RedisHttpSessionLogoutHandler;
 import com.example.stomp.security.handler.SecurityExceptionHandler;
@@ -25,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-        private final OidcMemberService simpleOidcUserService;
+        private final MemberService simpleOidcUserService;
         private final OicdLoginSuccessHandler oicdLoginSuccessHandler;
         private final SecurityExceptionHandler securityExceptionHandler;
         private final RedisHttpSessionLogoutHandler redisHttpSessionLogoutHandler;

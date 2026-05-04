@@ -20,8 +20,7 @@ import org.springframework.stereotype.Component;
 
 import com.example.stomp.app.constant.SessionConstant;
 import com.example.stomp.app.util.CookieUtil;
-import com.example.stomp.app.util.SecurityUtil;
-import com.example.stomp.member.dto.OidcMemberPrincipal;
+import com.example.stomp.member.dto.TempMemberPrincipal;
 import com.example.stomp.security.dto.RedisHttpSessionMemberPrincipal;
 import com.example.stomp.security.dto.RedisHttpSessionAuthenticationToken;
 
@@ -40,125 +39,71 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
     public boolean containsContext(HttpServletRequest request) {
         return CookieUtil.getLoginCookie(request)
                 .map(Cookie::getValue)
-                .map(sessionId -> SessionConstant.SESSION_KEY_PREFIX + sessionId)
+                .map(sessionId -> SessionConstant.SESSION_HKEY_PREFIX + sessionId)
                 .map(sessionKey -> Boolean.TRUE.equals(redis.hasKey(sessionKey)))
                 .orElse(false);
     }
 
     @Override
     public void saveContext(SecurityContext context, HttpServletRequest request, HttpServletResponse response) {
-        /**
-         * @formatter:off
-         * 
-         * OAuth2LoginAuthenticationFilter(AbstractAuthenticationProcessingFilter) will call this method
-         * when login succeed.
-         * 
-         * On this step, we have two to do.
-         * 
-         * 1. save the user's info in redis like session.
-         * 2. naturally switch session rather than blocking the new login try if the user logins with another paths
-         *    such as changing device.
-         * 
-         * @formatter:on
-         */
         Optional.ofNullable(context.getAuthentication())
                 .filter(Authentication::isAuthenticated) // Make sure there are no negative specifics on authentication
                                                          // process.
                 .ifPresent(at -> {
-                    String sessionId = CookieUtil.getLoginCookie(request)
-                            .map(Cookie::getValue)
+                    String sessionId = CookieUtil.getLoginCookie(request).map(Cookie::getValue)
                             .orElseGet(() -> UUID.randomUUID().toString()); // Create if absent.
 
-                    OidcMemberPrincipal pc = (OidcMemberPrincipal) at.getPrincipal();
+                    TempMemberPrincipal pc = (TempMemberPrincipal) at.getPrincipal();
 
-                    String participatedRoomId = pc.getRoomId();
-
-                    /**
-                     * @formatter:off
-                     * 
-                     * If a user logined, but there is ongoing chat, this usually means a device was switched.
-                     * Or it is possible as well that a user cleared brower caches.
-                     * 
-                     * ANYWAY, we have a response to make user can continue the chat. Save the 'roomId' in session. 
-                     * 
-                     * @formatter:on
-                     */
                     String luaScript = """
-                                --[[
-                                    I wondered if any user would actually attempt simultaneous login try.
+                            -- KEYS[1] : SESSION_HKEY_PREFIX
+                            -- KEYS[2] : SESSION_REVERSE_INDEX_KEY_PREFIX
+                            -- KEYS[3] : session expiration in seconds
 
-                                    Trying to cover every possiblescenario would make the app's complexity spiral out of control.
+                            -- ARGV[1] : newSessionId
+                            -- ARGV[2] : memberId
+                            -- ARGV[3] : authorities
 
-                                    However, I’ve decided to push the level of detail as far as I can personally handle. Let's go.
-                                --]]
-                                -- KEYS[1] : SESSION_KEY_PREFIX
-                                -- KEYS[2] : MEMBER_SESSION_INDEX_KEY_PREFIX
-                                -- KEYS[3] : session expiration in seconds
+                            -- 1. Delete previous session to comply with one session policy.
+                            local sessionReverseIndexKey = KEYS[2] .. ARGV[2]
+                            local oldSessionId = redis.call('GET', sessionReverseIndexKey)
 
-                                -- ARGV[1] : newSessionId
-                                -- ARGV[2] : memberId
-                                -- ARGV[3] : memberCode
-                                -- ARGV[4] : authorities
-                                -- ARGV[5] : roomId (nullable)
+                            -- If old session exists, we need to retrieve the wsSessionId before deleting it
+                            local wsSessionId = nil
+                            if oldSessionId then
+                                local oldSessionKey = KEYS[1] .. oldSessionId
+                                wsSessionId = redis.call('HGET', oldSessionKey, 'wsSessionId')
+                                redis.call('DEL', oldSessionKey)
+                            end
 
-                                -- 1. delete previous session to comply one session policy.
-                                local memberIndexKey = KEYS[2] .. ARGV[2]
-                                local oldSessionId = redis.call('GET', memberIndexKey)
+                            -- 2. Make the new session.
+                            local newSessionKey = KEYS[1] .. ARGV[1]
+                            redis.call('HMSET', newSessionKey,
+                                'memberId', ARGV[2],
+                                'authorities', ARGV[3],
+                                'httpSessionId', ARGV[1],
+                                'wsSessionId', wsSessionId
+                            )
 
-                                if oldSessionId then
-                                    local oldSessionKey = KEYS[1] .. oldSessionId
-                                    redis.call('DEL', oldSessionKey)
-                                end
+                            -- 3. Update the index and expiry.
+                            redis.call('EXPIRE', newSessionKey, KEYS[3])
+                            redis.call('SET', sessionReverseIndexKey, ARGV[1])
+                            redis.call('EXPIRE', sessionReverseIndexKey, KEYS[3])
 
-                                -- 2. make the new session.
-                                local newSessionKey = KEYS[1] .. ARGV[1]
-                                redis.call('HMSET', newSessionKey,
-                                    'memberId', ARGV[2],
-                                    'sessionId', ARGV[1],
-                                    'memberCode', ARGV[3],
-                                    'authorities', ARGV[4]
-                                )
-
-                                -- 3. add roomId field if exists.
-                                if ARGV[5] and ARGV[5] ~= "" then
-                                    redis.call('HSET', newSessionKey, 'roomId', ARGV[5])
-                                end
-
-                                -- 4. update the index and expiry.
-                                redis.call('EXPIRE', newSessionKey, KEYS[3])
-                                redis.call('SET', memberIndexKey, ARGV[1])
-                                redis.call('EXPIRE', memberIndexKey, KEYS[3])
-
-                                return;
-                            """;
+                            return;
+                                                        """;
 
                     redis.execute(
                             new DefaultRedisScript<>(luaScript),
                             Arrays.asList(
-                                    SessionConstant.SESSION_KEY_PREFIX,
-                                    SessionConstant.MEMBER_SESSION_INDEX_KEY_PREFIX,
+                                    SessionConstant.SESSION_HKEY_PREFIX,
+                                    SessionConstant.SESSION_REVERSE_INDEX_KEY_PREFIX,
                                     String.valueOf(TimeUnit.DAYS.toSeconds(SessionConstant.SESSION_VALID_DAYS))),
                             sessionId,
                             pc.getId(),
-                            pc.getCode(),
-                            SecurityUtil.authoritiesToString(at.getAuthorities()),
-                            participatedRoomId != null ? participatedRoomId : "");
+                            pc.getAuthorities());
 
-                    if (participatedRoomId != null) {
-                        /**
-                         * @formatter:off
-                         * Our quest doesn't end. You know that WebSocket still remains regardless of deletion of HttpSession.
-                         * We should make it disconnected as well.
-                         * 
-                         * The problem is, in here, Since we got multiple servers, We can't be sure whether the server which the user requests for login 
-                         * is the server which manages the WebSocket connection of the user's previous device. 
-                         * 
-                         * For this reason, we have to publish an event to all of the servers in order to cut them off.
-                         * @formatter:on 
-                         */
-
-                        // ..... event realted codes...
-                    }
+                    // 이벤트 발생
 
                     CookieUtil.setLoginCookie(sessionId, response);
                 });
@@ -193,7 +138,7 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
     }
 
     private Optional<SecurityContext> readSecurityContextFromRedis(String sessionId) {
-        Map<Object, Object> hashFileds = redis.opsForHash().entries(SessionConstant.SESSION_KEY_PREFIX + sessionId);
+        Map<Object, Object> hashFileds = redis.opsForHash().entries(SessionConstant.SESSION_HKEY_PREFIX + sessionId);
 
         if (hashFileds.isEmpty())
             return Optional.empty();
@@ -209,8 +154,8 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
     }
 
     private void extendSessionExpiry(String sessionId, String memberId) {
-        redis.expire(SessionConstant.SESSION_KEY_PREFIX + sessionId, 1, TimeUnit.DAYS);
-        redis.expire(SessionConstant.MEMBER_SESSION_INDEX_KEY_PREFIX + memberId, 1, TimeUnit.DAYS);
+        redis.expire(SessionConstant.SESSION_HKEY_PREFIX + sessionId, 1, TimeUnit.DAYS);
+        redis.expire(SessionConstant.SESSION_REVERSE_INDEX_KEY_PREFIX + memberId, 1, TimeUnit.DAYS);
     }
 
     // We are using over Security 6.0.

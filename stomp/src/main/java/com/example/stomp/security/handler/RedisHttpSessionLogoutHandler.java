@@ -27,8 +27,8 @@ public class RedisHttpSessionLogoutHandler implements LogoutHandler {
                     String memberId = ((RedisHttpSessionMemberPrincipal) authentication
                             .getPrincipal()).getId();
 
-                    redis.delete(SessionConstant.SESSION_KEY_PREFIX + sessionId);
-                    redis.delete(SessionConstant.MEMBER_SESSION_INDEX_KEY_PREFIX
+                    redis.delete(SessionConstant.SESSION_HKEY_PREFIX + sessionId);
+                    redis.delete(SessionConstant.SESSION_REVERSE_INDEX_KEY_PREFIX
                             + memberId);
                 });
     }

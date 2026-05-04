@@ -17,16 +17,14 @@ public class WsMemberPrincipal implements Principal {
 
     private String memberId;
 
-    private String memberCode;
+    @Setter
+    private String roomUUID;
 
     @Setter
-    private String roomId;
+    private Boolean isRecon;
 
-    private String httpSessionId;
-
-    public static WsMemberPrincipal create(RedisHttpSessionMemberPrincipal memberDetails) {
-        return new WsMemberPrincipal(memberDetails.getId(), memberDetails.getCode(), memberDetails.getRoomId(),
-                memberDetails.getSessionId());
+    public static WsMemberPrincipal create(RedisHttpSessionMemberPrincipal principal) {
+        return new WsMemberPrincipal(principal.getId(), null, false);
     }
 
     @Override

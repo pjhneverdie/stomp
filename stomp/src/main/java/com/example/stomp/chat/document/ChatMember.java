@@ -1,7 +1,7 @@
 package com.example.stomp.chat.document;
 
 import com.example.stomp.chat.document.enum_type.NetworkStatus;
-import com.example.stomp.chat.document.enum_type.PersonnelChapter;
+import com.example.stomp.chat.document.enum_type.ChatTrialStage;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -17,12 +17,12 @@ public class ChatMember {
 
     private String nickname;
 
-    private PersonnelChapter personnelChapter;
+    private ChatTrialStage personnelChapter;
 
     private NetworkStatus networkStatus;
 
     public static ChatMember create(String id, String nickname) {
-        return new ChatMember(id, nickname, PersonnelChapter.STAND_BY, NetworkStatus.CONNECTED);
+        return new ChatMember(id, nickname, ChatTrialStage.STAND_BY, NetworkStatus.CONNECTED);
     }
 
 }

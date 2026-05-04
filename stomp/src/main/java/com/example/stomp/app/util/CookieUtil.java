@@ -3,7 +3,6 @@ package com.example.stomp.app.util;
 import java.time.Duration;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.server.Cookie.SameSite;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;

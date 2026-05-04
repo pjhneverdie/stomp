@@ -27,9 +27,9 @@ public class ChatService {
     private final RedisModulesOperations<String> chatOps;
     private final ChatRoomRepository chatRoomRepository;
 
-    public String create(String name, List<String> passCodes) {
+    public String create(String issueTitle) {
 
-        return chatRoomRepository.save(ChatRoom.create(UUID.randomUUID().toString(), name, passCodes)).getId();
+        return chatRoomRepository.save(;
 
     }
 

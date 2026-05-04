@@ -4,16 +4,13 @@ public class SessionConstant {
     public static final String COOKIE_PATH = "/";
     public static final String COOKIE_NAME = "SOLOMON";
 
-    public static final String SESSION_KEY_PREFIX = "session:";
-    public static final String SESSION_MEMBER_ID_KEY = "memberId";
-    public static final String SESSION_SESSION_ID_KEY = "sessionId";
-    public static final String SESSION_MEMBER_CODE_KEY = "memberCode";
-    public static final String SESSION_AUHTORITIES_KEY = "authorities";
-    public static final String SESSION_ROOM_ID_KEY = "roomId";
+    public static final String SESSION_HKEY_PREFIX = "session:";
+    public static final String SESSION_MEMBER_ID_FKEY = "memberId";
+    public static final String SESSION_AUHTORITIES_FKEY = "authorities";
+    public static final String SESSION_HTTP_SESSION_ID_FKEY = "httpSessionId";
+    public static final String SESSION_WS_SESSION_ID_FKEY = "wsSessinId";
 
-    // We have to able to find the member's session even when we have only memberId.
-    // This is a index key for making above happen.
-    public static final String MEMBER_SESSION_INDEX_KEY_PREFIX = "member:session:";
+    public static final String SESSION_REVERSE_INDEX_KEY_PREFIX = "memberId";
 
     public static final int SESSION_VALID_DAYS = 1;
 }

@@ -32,17 +32,22 @@ public class ChatSubscriptionInterceptor implements ChannelInterceptor {
         }
 
         switch (accessor.getCommand()) {
+            case CONNECT: {
+
+            }
             case RECEIPT: {
+                // wsPrincipal.getRoomId() != null로 재접속인지 확인해야 함.
+                
+                // Boolean isReconnect = wsPrincipal.getRoomId() != null;
+                
+                // // String nickname = null;
 
-                Boolean isReconnect = wsPrincipal.getRoomId() != null;
-                String nickname = null;
+                // // if (!isReconnect) {
+                // // nickname = (String) accessor.getHeader("nickname");
+                // // }
 
-                if (!isReconnect) {
-                    nickname = (String) accessor.getHeader("nickname");
-                }
-
-                chatRoomService.participate(accessor.getReceiptId(),
-                        wsPrincipal.getMemberId(), nickname, isReconnect);
+                // // chatRoomService.participate(accessor.getReceiptId(),
+                // // wsPrincipal.getMemberId(), nickname, isReconnect);
 
             }
                 break;
