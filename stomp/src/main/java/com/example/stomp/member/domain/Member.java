@@ -69,4 +69,7 @@ public class Member extends BaseEntity {
         this.picture = picture;
     }
 
+    public void participate(ChatRoomMember chatRoomMember) {
+    }
+
 }

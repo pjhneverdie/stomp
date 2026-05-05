@@ -14,7 +14,9 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     Optional<Member> findByEmail(String email);
 
-    @Query("SELECT m FROM Member m JOIN FETCH m.participatedRoom pr WHERE m.email = :email")
+    @Query("SELECT DISTINCT m FROM Member m " +
+            "LEFT JOIN FETCH m.participatedRooms " +
+            "WHERE m.email = :email")
     Optional<Member> fetchJoinByEmailWithParticipatedRooms(@Param("email") String email);
 
 }

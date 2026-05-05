@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import com.example.stomp.app.infra.websocket.WsMemberPrincipal;
 import com.example.stomp.app.util.StompHeaderUtil;
+import com.example.stomp.chat.service.ChatRoomService;
 import com.example.stomp.chat.service.ChatService;
 
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ChatSubscriptionInterceptor implements ChannelInterceptor {
 
-    private final ChatService chatRoomService;
+    private final ChatRoomService chatRoomService;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -32,22 +33,7 @@ public class ChatSubscriptionInterceptor implements ChannelInterceptor {
         }
 
         switch (accessor.getCommand()) {
-            case CONNECT: {
-
-            }
             case RECEIPT: {
-                // wsPrincipal.getRoomId() != null로 재접속인지 확인해야 함.
-                
-                // Boolean isReconnect = wsPrincipal.getRoomId() != null;
-                
-                // // String nickname = null;
-
-                // // if (!isReconnect) {
-                // // nickname = (String) accessor.getHeader("nickname");
-                // // }
-
-                // // chatRoomService.participate(accessor.getReceiptId(),
-                // // wsPrincipal.getMemberId(), nickname, isReconnect);
 
             }
                 break;

@@ -15,21 +15,24 @@ import lombok.Setter;
 @Getter
 public class WsMemberPrincipal implements Principal {
 
-    private String memberId;
+    private Long memberId;
 
     @Setter
     private String roomUUID;
 
     @Setter
+    private String nickname;
+
+    @Setter
     private Boolean isRecon;
 
     public static WsMemberPrincipal create(RedisHttpSessionMemberPrincipal principal) {
-        return new WsMemberPrincipal(principal.getId(), null, false);
+        return new WsMemberPrincipal(Long.valueOf(principal.getId()), null, null, false);
     }
 
     @Override
     public String getName() {
-        return this.memberId;
+        return String.valueOf(memberId);
     }
 
 }
