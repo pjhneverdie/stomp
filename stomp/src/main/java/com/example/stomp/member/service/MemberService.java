@@ -24,7 +24,7 @@ public class MemberService extends OidcUserService {
         public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
                 OidcUser oidcUser = super.loadUser(userRequest);
 
-                return memberRepository.fetchJoinByEmailWithParticipatedRooms(oidcUser.getEmail())
+                return memberRepository.findByEmail(oidcUser.getEmail())
                                 .map(member -> {
                                         member.login(oidcUser.getEmail(), oidcUser.getPicture());
 
@@ -45,5 +45,7 @@ public class MemberService extends OidcUserService {
                                                         String.valueOf(member.getId()));
                                 });
         }
+
+        
 
 }

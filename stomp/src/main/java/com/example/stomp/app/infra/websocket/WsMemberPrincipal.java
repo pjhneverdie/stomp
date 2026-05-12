@@ -7,15 +7,13 @@ import com.example.stomp.security.dto.RedisHttpSessionMemberPrincipal;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 public class WsMemberPrincipal implements Principal {
 
-    private Long memberId;
+    private final Long id;
 
     @Setter
     private String roomUUID;
@@ -26,13 +24,17 @@ public class WsMemberPrincipal implements Principal {
     @Setter
     private Boolean isRecon;
 
+    private String wsSessionId;
+
+    private String httpSessionId;
+
     public static WsMemberPrincipal create(RedisHttpSessionMemberPrincipal principal) {
-        return new WsMemberPrincipal(Long.valueOf(principal.getId()), null, null, false);
+        return new WsMemberPrincipal(Long.valueOf(principal.getId()), null, null, null, null, null);
     }
 
     @Override
     public String getName() {
-        return String.valueOf(memberId);
+        return String.valueOf(id);
     }
 
 }

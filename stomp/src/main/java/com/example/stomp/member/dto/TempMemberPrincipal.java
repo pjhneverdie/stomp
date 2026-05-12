@@ -11,7 +11,7 @@ import lombok.Getter;
 
 // OidcAuthorizationCodeAuthenticationProvider will set this as Principal.
 @Getter
-public class TempMemberPrincipal extends DefaultOidcUser { // This is used temporarily for making session.
+public class TempMemberPrincipal extends DefaultOidcUser { // This is used temporarily for making redis session.
 
     private final String id;
 

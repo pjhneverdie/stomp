@@ -42,9 +42,6 @@ public class Member extends BaseEntity {
     @OneToOne(mappedBy = "member")
     private Credential credential;
 
-    @OneToMany(mappedBy = "member")
-    private List<ChatRoomMember> participatedRooms = new ArrayList<>();
-
     public static Member createMember(String email, String picture) {
         Member member = new Member();
         member.email = email;
@@ -67,9 +64,6 @@ public class Member extends BaseEntity {
     public void login(String email, String picture) {
         this.email = email;
         this.picture = picture;
-    }
-
-    public void participate(ChatRoomMember chatRoomMember) {
     }
 
 }

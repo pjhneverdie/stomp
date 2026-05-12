@@ -42,4 +42,6 @@ public class ChatRoomMember extends BaseEntity {
         return new ChatRoomMember(chatRoom, member, nickname, MemberTrialStage.JOINED);
     }
 
+    
+
 }

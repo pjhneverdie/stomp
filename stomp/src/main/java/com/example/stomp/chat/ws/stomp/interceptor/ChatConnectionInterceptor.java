@@ -61,9 +61,3 @@ public class ChatConnectionInterceptor implements ChannelInterceptor {
     }
 
 }
-
-// 아니 잘봐.
-// 이제는 이렇게 해야해.
-// 일단 채팅방 히스토리를 볼 때는 END로 검색해서 가져오고,
-// 한 번에 두 개 이상 채팅방 참여가 불가능하니까, 첨에 WSPrincipal 만들 때 현재 진행 중인 roomId를 넣는거야.
-//

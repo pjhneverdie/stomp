@@ -65,4 +65,8 @@ public class ChatRoom extends BaseEntity {
         this.members.add(chatRoomMember);
     }
 
+    public void leave(Long memberId) {
+        this.members.removeIf(m -> m.getId().equals(memberId));
+    }
+
 }

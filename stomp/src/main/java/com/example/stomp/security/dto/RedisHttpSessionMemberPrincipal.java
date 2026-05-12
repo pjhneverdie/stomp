@@ -1,6 +1,5 @@
 package com.example.stomp.security.dto;
 
-import java.security.Principal;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;
@@ -13,19 +12,19 @@ import com.example.stomp.app.util.SecurityUtil;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
-public class RedisHttpSessionMemberPrincipal implements Principal {
+public class RedisHttpSessionMemberPrincipal {
 
-    private String id;
+    private final String id;
 
     private Collection<? extends GrantedAuthority> authorities;
 
-    private String httpSessionId;
+    private final String httpSessionId;
 
+    @Setter
     private String wsSessionId;
 
     public static RedisHttpSessionMemberPrincipal fromHashFields(Map<Object, Object> sessionMap) {
@@ -36,11 +35,6 @@ public class RedisHttpSessionMemberPrincipal implements Principal {
                 SecurityUtil.stringToAuthorities(getStr.apply(SessionConstant.SESSION_AUHTORITIES_FKEY)),
                 getStr.apply(SessionConstant.SESSION_HTTP_SESSION_ID_FKEY),
                 getStr.apply(SessionConstant.SESSION_WS_SESSION_ID_FKEY));
-    }
-
-    @Override
-    public String getName() {
-        return this.id;
     }
 
 }

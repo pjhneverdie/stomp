@@ -20,9 +20,10 @@ import org.springframework.stereotype.Component;
 
 import com.example.stomp.app.constant.SessionConstant;
 import com.example.stomp.app.util.CookieUtil;
+import com.example.stomp.app.util.SecurityUtil;
 import com.example.stomp.member.dto.TempMemberPrincipal;
-import com.example.stomp.security.dto.RedisHttpSessionMemberPrincipal;
 import com.example.stomp.security.dto.RedisHttpSessionAuthenticationToken;
+import com.example.stomp.security.dto.RedisHttpSessionMemberPrincipal;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -44,7 +45,9 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
                 .orElse(false);
     }
 
-    @Override
+    public void setWsSessionId(String wsSessionId) {
+    }
+
     public void saveContext(SecurityContext context, HttpServletRequest request, HttpServletResponse response) {
         Optional.ofNullable(context.getAuthentication())
                 .filter(Authentication::isAuthenticated) // Make sure there are no negative specifics on authentication
