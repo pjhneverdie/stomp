@@ -1,22 +1,19 @@
 package com.example.stomp.member.domain;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import com.example.stomp.app.domain.BaseEntity;
-import com.example.stomp.chat.domain.ChatRoomMember;
-import com.example.stomp.member.domain.enum_type.MemberRole;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -39,16 +36,12 @@ public class Member extends BaseEntity {
     @Column(nullable = false)
     private MemberRole role = MemberRole.FREE;
 
-    @OneToOne(mappedBy = "member")
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "credential_id", nullable = false, unique = true)
     private Credential credential;
 
     public static Member createMember(String email, String picture) {
-        Member member = new Member();
-        member.email = email;
-        member.picture = picture;
-        member.credential = Credential.create(member);
-
-        return member;
+        return new Member(email, picture, MemberRole.FREE, Credential.create());
     }
 
     public List<GrantedAuthority> getAuthorities() {

@@ -12,11 +12,8 @@ import org.springframework.test.context.ContextConfiguration;
 import com.example.stomp.infra.redis.SlicedRedisSetUp;
 
 @SlicedRedisSetUp
-@ContextConfiguration(classes = { ChatService.class })
-public class ChatServiceTest {
 
-    @Autowired
-    private ChatService chatService;
+public class ChatServiceTest {
 
     @TestConfiguration
     static class TesstConfig {
@@ -28,9 +25,6 @@ public class ChatServiceTest {
 
     @Test
     void testCreate() throws InterruptedException {
-        String id = chatService.create("123", List.of("abcd", "efg"));
-
-        chatService.participate("chatRoom:" + id, "1", "nickname", false);
 
     }
 

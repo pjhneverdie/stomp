@@ -1,4 +1,4 @@
-package com.example.stomp.chat.dto.exception;
+package com.example.stomp.chat.dto;
 
 import org.springframework.http.HttpStatus;
 
@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public enum ChatExceptions implements ExceptionInfo {
+    
     UNEXISTS_CHAT(HttpStatus.BAD_REQUEST, "Multiple session is not allowed"),
     MAX_CAPACITY_EXCEEDED(HttpStatus.BAD_REQUEST, "You're not the invited"),
     MULTIPLE_WS_CONNECTION_DETECTED(HttpStatus.BAD_REQUEST, "Multiple connection is not allowed");

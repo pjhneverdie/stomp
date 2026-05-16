@@ -5,12 +5,14 @@ import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.example.stomp.app.dto.exception.AppException;
 import com.example.stomp.member.domain.Member;
-import com.example.stomp.member.dto.TempMemberPrincipal;
+import com.example.stomp.member.dto.MemberExceptions;
+import com.example.stomp.member.dto.OidcMemberPrincipal;
 import com.example.stomp.member.repository.MemberRepository;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -26,9 +28,10 @@ public class MemberService extends OidcUserService {
 
                 return memberRepository.findByEmail(oidcUser.getEmail())
                                 .map(member -> {
+                                        // Keep tracking the diffs.
                                         member.login(oidcUser.getEmail(), oidcUser.getPicture());
 
-                                        return new TempMemberPrincipal(
+                                        return new OidcMemberPrincipal(
                                                         member.getAuthorities(),
                                                         oidcUser.getIdToken(),
                                                         oidcUser.getUserInfo(),
@@ -38,7 +41,7 @@ public class MemberService extends OidcUserService {
                                         Member member = memberRepository.save(Member.createMember(oidcUser.getEmail(),
                                                         oidcUser.getPicture()));
 
-                                        return new TempMemberPrincipal(
+                                        return new OidcMemberPrincipal(
                                                         member.getAuthorities(),
                                                         oidcUser.getIdToken(),
                                                         oidcUser.getUserInfo(),
@@ -46,6 +49,17 @@ public class MemberService extends OidcUserService {
                                 });
         }
 
-        
+        public Member getMemberById(Long id) {
+                return memberRepository.findById(id).orElseThrow(() -> {
+                        throw new AppException(MemberExceptions.UNEXISTS_MEMBER);
+                });
+        }
+
+        public Member getMemberWithCredentialById(Long id) {
+                return memberRepository.findWithCredentialById(id).orElseThrow(() -> {
+                        throw new AppException(MemberExceptions.UNEXISTS_MEMBER);
+                });
+
+        }
 
 }

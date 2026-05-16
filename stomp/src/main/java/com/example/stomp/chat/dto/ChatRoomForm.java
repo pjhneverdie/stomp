@@ -1,4 +1,4 @@
-package com.example.stomp.chat.dto.form;
+package com.example.stomp.chat.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
@@ -7,7 +7,7 @@ public abstract class ChatRoomForm {
     private ChatRoomForm() {
     }
 
-    public record Create(@NotBlank String name, @NotBlank String memberCode) {
+    public record Create(@NotBlank String name) {
     }
 
 }

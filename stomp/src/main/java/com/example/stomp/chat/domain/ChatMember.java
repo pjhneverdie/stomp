@@ -1,7 +1,6 @@
 package com.example.stomp.chat.domain;
 
 import com.example.stomp.app.domain.BaseEntity;
-import com.example.stomp.chat.document.enum_type.MemberTrialStage;
 import com.example.stomp.member.domain.Member;
 
 import jakarta.persistence.Column;
@@ -11,17 +10,18 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
+@Table(name = "chat_room_member")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
-public class ChatRoomMember extends BaseEntity {
+public class ChatMember extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chat_room_uuid", referencedColumnName = "chat_room_uuid", nullable = false)
@@ -36,12 +36,10 @@ public class ChatRoomMember extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
-    private MemberTrialStage trialStage;
+    private PersonelTrialStage trialStage;
 
-    protected static ChatRoomMember create(ChatRoom chatRoom, Member member, String nickname) {
-        return new ChatRoomMember(chatRoom, member, nickname, MemberTrialStage.JOINED);
+    protected static ChatMember create(ChatRoom chatRoom, Member member, String nickname) {
+        return new ChatMember(chatRoom, member, nickname, PersonelTrialStage.JOINED);
     }
-
-    
 
 }

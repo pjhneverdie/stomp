@@ -7,12 +7,10 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 
-import com.example.stomp.app.constant.SessionConstant;
-import com.example.stomp.app.infra.websocket.WsMemberPrincipal;
 import com.example.stomp.app.util.StompHeaderUtil;
-import com.example.stomp.chat.service.ChatCleanUpService;
+import com.example.stomp.chat.dto.ChatJoinRequest;
 import com.example.stomp.chat.service.ChatRoomService;
-import com.example.stomp.security.repository.RedisHttpSessionContextRepository;
+import com.example.stomp.member.service.MemberService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,14 +22,11 @@ public class ChatSubscriptionInterceptor implements ChannelInterceptor {
 
     private final ChatRoomService chatRoomService;
 
-    private final ChatCleanUpService chatCleanUpService;
-
-    private final RedisHttpSessionContextRepository redisHttpSessionContextRepository;
+    private final MemberService memberService;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-        WsMemberPrincipal wsMpc = StompHeaderUtil.getPrincipal(accessor);
 
         // This is just a heartbeat.
         if (accessor.getCommand() == null) {
@@ -39,11 +34,17 @@ public class ChatSubscriptionInterceptor implements ChannelInterceptor {
         }
 
         switch (accessor.getCommand()) {
+            /**
+             * This is for the first time subscription of the chatroom.
+             */
             case RECEIPT: {
-                chatRoomService.join(wsMpc.getRoomUUID(), wsMpc.getId(), wsMpc.getNickname());
+                String nickname = (String) accessor.getHeader("nickname");
+                String roomUUID = (String) accessor.getHeader("roomUUID");
 
-                redisHttpSessionContextRepository.setWsSessionId(accessor.getSessionId());
-
+                chatRoomService.join(
+                        new ChatJoinRequest(roomUUID,
+                                memberService.getMemberById(StompHeaderUtil.getPrincipal(accessor).getId()),
+                                nickname));
             }
                 break;
 

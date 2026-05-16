@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
 import com.example.stomp.app.constant.SessionConstant;
 import com.example.stomp.app.util.CookieUtil;
 import com.example.stomp.app.util.SecurityUtil;
-import com.example.stomp.member.dto.TempMemberPrincipal;
+import com.example.stomp.member.dto.OidcMemberPrincipal;
 import com.example.stomp.security.dto.RedisHttpSessionAuthenticationToken;
 import com.example.stomp.security.dto.RedisHttpSessionMemberPrincipal;
 
@@ -45,7 +45,14 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
                 .orElse(false);
     }
 
-    public void setWsSessionId(String wsSessionId) {
+    public void setWsSessionId(String httpSessionId, String wsSessionId) {
+        redis.opsForHash().put(SessionConstant.SESSION_HKEY_PREFIX + httpSessionId,
+                SessionConstant.SESSION_WS_SESSION_ID_FKEY, wsSessionId);
+    }
+
+    public void deleteWsSessionId(String httpSessionId) {
+        redis.opsForHash().delete(SessionConstant.SESSION_HKEY_PREFIX + httpSessionId,
+                SessionConstant.SESSION_WS_SESSION_ID_FKEY);
     }
 
     public void saveContext(SecurityContext context, HttpServletRequest request, HttpServletResponse response) {
@@ -56,7 +63,7 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
                     String sessionId = CookieUtil.getLoginCookie(request).map(Cookie::getValue)
                             .orElseGet(() -> UUID.randomUUID().toString()); // Create if absent.
 
-                    TempMemberPrincipal pc = (TempMemberPrincipal) at.getPrincipal();
+                    OidcMemberPrincipal pc = (OidcMemberPrincipal) at.getPrincipal();
 
                     String luaScript = """
                             -- KEYS[1] : SESSION_HKEY_PREFIX

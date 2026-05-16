@@ -16,20 +16,13 @@ public class WsMemberPrincipal implements Principal {
     private final Long id;
 
     @Setter
-    private String roomUUID;
-
-    @Setter
-    private String nickname;
-
-    @Setter
-    private Boolean isRecon;
-
     private String wsSessionId;
 
-    private String httpSessionId;
+    private final String httpSessionId;
 
     public static WsMemberPrincipal create(RedisHttpSessionMemberPrincipal principal) {
-        return new WsMemberPrincipal(Long.valueOf(principal.getId()), null, null, null, null, null);
+        return new WsMemberPrincipal(Long.valueOf(principal.getId()), null,
+                principal.getHttpSessionId());
     }
 
     @Override

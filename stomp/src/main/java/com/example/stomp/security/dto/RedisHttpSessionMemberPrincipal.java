@@ -37,4 +37,8 @@ public class RedisHttpSessionMemberPrincipal {
                 getStr.apply(SessionConstant.SESSION_WS_SESSION_ID_FKEY));
     }
 
+    public Long getLongId() {
+        return Long.valueOf(id);
+    }
+
 }
