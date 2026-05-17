@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS chat_message (
     id INT PRIMARY KEY AUTO_INCREMENT,
     chat_room_uuid VARCHAR(36) NOT NULL,
-    chat_room_member_id INT NOT NULL,
+    chat_room_member_id INT,
     message_type VARCHAR NOT NULL,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,

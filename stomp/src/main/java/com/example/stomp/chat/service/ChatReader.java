@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ChatReader {
 
+    private final Chat
     private final StringRedisTemplate redis;
 
     public void dd() {
@@ -15,6 +16,7 @@ public class ChatReader {
 
         redis.opsForHash().entries("chatroom:" + "uuid");
         //
+
 
     }
 

@@ -19,5 +19,4 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
             "LEFT JOIN FETCH crms.member " +
             "WHERE cr.uuid = :uuid")
     Optional<ChatRoom> fetchJoinByUuidWithMembers(@Param("uuid") String uuid);
-
 }

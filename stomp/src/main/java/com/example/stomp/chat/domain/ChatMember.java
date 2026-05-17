@@ -31,15 +31,18 @@ public class ChatMember extends BaseEntity {
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false)
     private String nickname;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false)
     private PersonelTrialStage trialStage;
 
+    @Column(nullable = true)
+    private Integer lastReadMessageId;
+
     protected static ChatMember create(ChatRoom chatRoom, Member member, String nickname) {
-        return new ChatMember(chatRoom, member, nickname, PersonelTrialStage.JOINED);
+        return new ChatMember(chatRoom, member, nickname, PersonelTrialStage.JOINED, null);
     }
 
 }

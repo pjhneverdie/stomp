@@ -29,11 +29,11 @@ public class ChatRoom extends BaseEntity {
     @Column(name = "chat_room_uuid", nullable = false, unique = true, length = 36)
     private String uuid;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false)
     private String issueTitle;
 
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 50)
     private ChatTrialStage trialStage;
 
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -50,9 +50,7 @@ public class ChatRoom extends BaseEntity {
     }
 
     public void join(Member member, String nickname) {
-
         validateIfJoinable();
-
         this.members.add(ChatMember.create(this, member, nickname));
     }
 

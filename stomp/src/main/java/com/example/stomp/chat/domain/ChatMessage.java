@@ -1,7 +1,5 @@
 package com.example.stomp.chat.domain;
 
-import java.lang.reflect.Member;
-
 import com.example.stomp.app.domain.BaseEntity;
 
 import jakarta.persistence.Column;
@@ -19,15 +17,15 @@ public class ChatMessage extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private ChatRoom chatRoom;
 
-    @JoinColumn(name = "chat_room_member_id", nullable = false)
+    @JoinColumn(name = "chat_room_member_id")
     @ManyToOne(fetch = FetchType.LAZY)
     private ChatMember sender;
 
     @Column(nullable = false)
     private String content;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private MessageType messageType;
 
 }

@@ -32,6 +32,11 @@ public class ChatRoomService {
         chatRoom.join(joinRequest.member(), joinRequest.nickname());
     }
 
+    public void get() {
+        chatRoomRepository.fetchJoinByUuidWithMembers(roomUUID);
+
+    }
+
     // public void leave(String roomUUID, Long memberId) {
     // chatRoomRepository.fetchJoinByUuidWithMembers(roomUUID).ifPresent((chatRoom)
     // -> {
