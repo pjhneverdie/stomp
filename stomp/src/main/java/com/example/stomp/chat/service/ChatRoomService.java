@@ -25,15 +25,17 @@ public class ChatRoomService {
     }
 
     public void join(ChatJoinRequest joinRequest) {
-        ChatRoom chatRoom = chatRoomRepository.findByUuid(joinRequest.roomUUID()).orElseThrow(() -> {
+        ChatRoom chatRoom = chatRoomRepository.fetchJoinByUuidWithMembers(joinRequest.roomUUID()).orElseThrow(() -> {
             throw new AppException(ChatExceptions.UNEXISTS_CHAT);
         });
 
         chatRoom.join(joinRequest.member(), joinRequest.nickname());
     }
 
-    public void get() {
-        chatRoomRepository.fetchJoinByUuidWithMembers(roomUUID);
+    public ChatRoom getByUUID(String uuid) {
+        return chatRoomRepository.fetchJoinByUuidWithMembers(uuid).orElseThrow(() -> {
+            throw new AppException(ChatExceptions.UNEXISTS_CHAT);
+        });
 
     }
 
