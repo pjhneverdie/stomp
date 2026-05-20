@@ -1,5 +1,6 @@
 package com.example.stomp.chat.domain;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -39,8 +40,12 @@ public class ChatRoom extends BaseEntity {
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ChatMember> members;
 
+    @Column(nullable = false)
+    private LocalDateTime lastActivedAt;
+
     public static ChatRoom create(String issueTitle) {
-        return new ChatRoom(UUID.randomUUID().toString(), issueTitle, ChatTrialStage.STAND_BY, new ArrayList<>());
+        return new ChatRoom(UUID.randomUUID().toString(), issueTitle, ChatTrialStage.STAND_BY, new ArrayList<>(),
+                LocalDateTime.of(1970, 1, 1, 0, 0));
     }
 
     private void validateIfJoinable() {

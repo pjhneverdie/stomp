@@ -13,6 +13,9 @@ import jakarta.persistence.ManyToOne;
 @Entity
 public class ChatMessage extends BaseEntity {
 
+    @Column(nullable = false)
+    private Long sequence;
+
     @JoinColumn(name = "chat_room_uuid", referencedColumnName = "chat_room_uuid", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private ChatRoom chatRoom;

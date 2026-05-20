@@ -1,10 +1,15 @@
 package com.example.stomp.chat.service;
 
+import java.util.List;
+
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.example.stomp.app.dto.exception.AppException;
 import com.example.stomp.chat.domain.ChatRoom;
 import com.example.stomp.chat.dto.ChatExceptions;
+import com.example.stomp.chat.dto.ChatCacheChunk;
+import com.example.stomp.chat.dto.ChatCacheChunk.ChatRoomMeta;
 import com.example.stomp.chat.dto.ChatJoinRequest;
 import com.example.stomp.chat.repository.ChatRoomRepository;
 
@@ -32,11 +37,15 @@ public class ChatRoomService {
         chatRoom.join(joinRequest.member(), joinRequest.nickname());
     }
 
-    public ChatRoom getByUUID(String uuid) {
+    public ChatRoom getByUUIDWithMembers(String uuid) {
         return chatRoomRepository.fetchJoinByUuidWithMembers(uuid).orElseThrow(() -> {
             throw new AppException(ChatExceptions.UNEXISTS_CHAT);
         });
 
+    }
+
+    public List<ChatRoomMeta> getAllChatRoomMetaByRoomUuid(List<String> roomUuids) {
+        return chatRoomRepository.findAllChatRoomMetasByRoomUuid(roomUuids);
     }
 
     // public void leave(String roomUUID, Long memberId) {
