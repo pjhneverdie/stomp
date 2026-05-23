@@ -17,7 +17,7 @@ public class MemberFacade {
 
     @Transactional(readOnly = true)
     public Me getMe(Long id) {
-        return Me.of(memberService.getMemberWithCredentialById(id), chatRoomMemberService.getJoinedRoomUUIDsById(id));
+        return Me.of(memberService.getMemberWithCredentialById(id), chatRoomMemberService.get(id));
     }
 
 }

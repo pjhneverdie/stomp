@@ -25,8 +25,5 @@ public class ChatMemberService {
         return chatMemberRepository.findAllByMemberIdWithChatRoom(null);
     }
 
-    public List<ChatMemberMeta> getAllChatMemberMetaByRoomUuid(List<String> roomUuids) {
-        return chatMemberRepository.findSimpleChatMembersByRoomUuids(roomUuids);
-    }
 
 }

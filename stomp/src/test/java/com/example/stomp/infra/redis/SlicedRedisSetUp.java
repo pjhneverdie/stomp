@@ -34,8 +34,8 @@ import com.redis.om.spring.RedisModulesConfiguration;
 @DataRedisTest
 @EnableConfigurationProperties(RedisProperties.class)
 @Import({
-        GsonBean.class,
-        RedisModulesConfiguration.class,
+        // GsonBean.class,
+        // RedisModulesConfiguration.class,
         RedisConfig.class
 })
 public @interface SlicedRedisSetUp {
