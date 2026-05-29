@@ -21,8 +21,8 @@ public class ChatRoomMemberService {
         return chatMemberRepository.findChatRoomUuidsByMemberId(memberId);
     }
 
-    public List<ChatRoomMember> getMeAsChatMember() {
-        return chatMemberRepository.findAllByMemberIdWithChatRoom(null);
-    }
+    // public List<ChatRoomMember> getMeAsChatMember() {
+    //     return chatMemberRepository.findAllByMemberIdWithChatRoom(null);
+    // }
 
 }

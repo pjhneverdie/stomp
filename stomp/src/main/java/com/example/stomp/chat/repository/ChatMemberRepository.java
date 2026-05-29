@@ -12,45 +12,38 @@ import com.example.stomp.chat.dto.ChatCacheChunk.ChatMemberMeta;
 
 public interface ChatMemberRepository extends JpaRepository<ChatRoomMember, Long> {
 
+        // @Query("select crm from ChatRoomMember crm")
 
-       @Query("select crm from ChatRoomMember crm")
-
-
-
-
-
-
-
-
-
-        @Query("select cm from ChatMember cm join fetch cm.chatRoom where cm.member.id = :memberId")
-        List<ChatRoomMember> findAllByMemberIdWithChatRoom(@Param("memberId") Long memberId);
+        // @Query("select cm from ChatMember cm join fetch cm.chatRoom where
+        // cm.member.id = :memberId")
+        // List<ChatRoomMember> findAllByMemberIdWithChatRoom(@Param("memberId") Long
+        // memberId);
 
         @Query("select cm.chatRoom.uuid from ChatMember cm where cm.member.id = :memberId")
         List<String> findChatRoomUuidsByMemberId(@Param("memberId") Long memberId);
 
-        @Query("SELECT new com.example.dto.ChatInitialView$SimpleChatMeta(" +
+        // @Query("SELECT new com.example.dto.ChatInitialView$SimpleChatMeta(" +
 
-                        "  r.uuid, r.issueTitle, r.trialStage, " +
+        //                 "  r.uuid, r.issueTitle, r.trialStage, " +
 
-                        "  (SELECT MAX(m.sequence) FROM ChatMessage m WHERE m.chatRoom = r), " +
+        //                 "  (SELECT MAX(m.sequence) FROM ChatMessage m WHERE m.chatRoom = r), " +
 
-                        "  (SELECT m.content FROM ChatMessage m WHERE m.chatRoom = r ORDER BY m.sequence DESC LIMIT 1)"
-                        +
+        //                 "  (SELECT m.content FROM ChatMessage m WHERE m.chatRoom = r ORDER BY m.sequence DESC LIMIT 1)"
+        //                 +
 
-                        "  r.lastActivedAt" +
+        //                 "  r.lastActivedAt" +
 
-                        ") " +
+        //                 ") " +
 
-                        "FROM ChatRoom r " +
+        //                 "FROM ChatRoom r " +
 
-                        "WHERE r.uuid IN (" +
+        //                 "WHERE r.uuid IN (" +
 
-                        "    SELECT cm.chatRoom.uuid FROM ChatMember cm WHERE cm.member.id = :memberId" +
+        //                 "    SELECT cm.chatRoom.uuid FROM ChatMember cm WHERE cm.member.id = :memberId" +
 
-                        ") " +
+        //                 ") " +
 
-                        "ORDER BY r.lastActivedAt DESC")
+        //                 "ORDER BY r.lastActivedAt DESC")
 
         List<ChatMemberMeta> findAllChatMemberMetasByRoomUuid();
 
