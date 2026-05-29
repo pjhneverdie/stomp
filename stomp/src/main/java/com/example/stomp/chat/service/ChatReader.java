@@ -1,37 +1,19 @@
 package com.example.stomp.chat.service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.redis.connection.RedisConnection;
-import org.springframework.data.redis.connection.RedisZSetCommands;
 import org.springframework.data.redis.connection.StringRedisConnection;
-import org.springframework.data.redis.connection.zset.Tuple;
 import org.springframework.data.redis.core.RedisCallback;
-import org.springframework.data.redis.core.RedisOperations;
-import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
-import com.example.stomp.chat.document.ChatRoomPreview;
-import com.example.stomp.chat.domain.ChatMember;
-import com.example.stomp.chat.domain.ChatRoom;
-import com.example.stomp.chat.dto.ChatCacheChunk;
-import com.example.stomp.chat.dto.ChatCacheChunk.ChatMemberMeta;
-import com.example.stomp.chat.dto.ChatCacheChunk.ChatRoomMeta;
-import com.example.stomp.chat.dto.SimpleChatMessage;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.stomp.app.constant.RedisConstant;
+import com.example.stomp.chat.document.RoomPreview;
 
 import lombok.RequiredArgsConstructor;
 
@@ -41,50 +23,82 @@ public class ChatReader {
 
     private final StringRedisTemplate redisTemplate;
 
-    // private final ChatRoomService chatRoomService;
-
-    // private final ChatMessageService chatMessageService;
-    // private final ChatMemberService chatMemberService;
-    private final ObjectMapper objectMapper;
-
     /**
       * @formatter:off
       * 
-      * 1. fetch top 20 active entries from member:{memberId}:rooms (ZSET).
+      * 1. fetch top 20 active entries.
       * 
-      * 2. fetch the entire member:{memberId}:roomPreviews in a single operation(assuming a heavy user scenario where the total number of rooms is at most ~100). 
-      *    since redis is single-threaded, a single bulk fetch is more efficient than executing ~20 separate requests. 
+      * 2. fetch the preview HASH of each entry.
       *    
-      * 3. perform filtering and transformation at the application layer.
+      * 3. parse the HASH FIELD map to dto and return.
       * 
       * @formatter:on
       */
-    public List<ChatRoomPreview> getChatList(Long memberId, Integer count) {
-        Set<ZSetOperations.TypedTuple<String>> tuples = redisTemplate.opsForZSet()
-                .reverseRangeWithScores(
-                        "member:" + memberId + ":rooms",
-                        0,
-                        19);
+    public List<RoomPreview> getChatRoomList(Long memberId, Pageable pageable) {
+        long start = pageable.getOffset();
+        long end = start + pageable.getPageSize() - 1;
 
-        List<String> roomIds = tuples.stream()
+        // 1.
+        Set<ZSetOperations.TypedTuple<String>> zset = redisTemplate.opsForZSet()
+                .reverseRangeWithScores(
+                        RedisConstant.memberRooms(memberId),
+                        start,
+                        end);
+
+        if (zset == null || zset.isEmpty()) {
+            // Check if there are no any chat user joined for real or just vacancy of cache.
+            return List.of();
+        }
+
+        // top 20 active entries.
+        List<String> roomUuids = zset.stream()
                 .map(ZSetOperations.TypedTuple::getValue)
                 .toList();
 
+        // ZSET to MAP.
+        Map<String, Double> mapZSET = zset.stream()
+                .collect(Collectors.toMap(
+                        ZSetOperations.TypedTuple::getValue,
+                        ZSetOperations.TypedTuple::getScore));
+
+        // 2.
         List<Object> results = redisTemplate.executePipelined(
                 (RedisCallback<Object>) connection -> {
                     StringRedisConnection redis = (StringRedisConnection) connection;
 
-                    for (String roomId : roomIds) {
-                        redis.hGetAll("member:" + memberId + ":roomPreview:" + roomId);
+                    for (String roomUuid : roomUuids) {
+                        redis.hGetAll(RedisConstant.roomPreview(memberId, roomUuid));
                     }
 
                     return null;
                 });
 
-        List<Map<String, String>> previews = results.stream()
-                .map(result -> (Map<String, String>) result)
-                .toList();
-        
+        // HASH MAPs of each entry.
+        List<Map<String, String>> previewMaps = results.stream().map(result -> (Map<String, String>) result).toList();
+
+        // 3.
+        putFromScoreToLastMessagedAt(previewMaps, mapZSET);
+        return previewMaps.stream().map((previewMap) -> {
+            return RoomPreview.from(previewMap);
+        }).toList();
+    }
+
+    private void putFromScoreToLastMessagedAt(List<Map<String, String>> previewMaps, Map<String, Double> mapZSET) {
+        previewMaps.forEach(map -> {
+            Double score = mapZSET.get(map.get(RedisConstant.ROOM_PREVIEW_HFKEY_UUID));
+
+            if (score != null) {
+                map.put(
+                        RoomPreview.PREVIEW_DTO_MAP_LAST_MESSAGED_KEY,
+                        String.valueOf(score.longValue()));
+            }
+        });
+    }
+
+    public void dd(){
+        // mysql에서 유저가 참여중인 채팅방 전부 get, 
+        // 없으면 ok
+        // 있으면 반환 후 필백 .
     }
 
     // public List<ChatCacheChunk> loadChatCacheChunk(List<String>

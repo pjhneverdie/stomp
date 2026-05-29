@@ -11,7 +11,7 @@ import com.example.stomp.chat.dto.ChatExceptions;
 import com.example.stomp.chat.dto.ChatCacheChunk;
 import com.example.stomp.chat.dto.ChatCacheChunk.ChatRoomMeta;
 import com.example.stomp.chat.dto.ChatJoinRequest;
-import com.example.stomp.chat.repository.ChatRoomRepository;
+import com.example.stomp.chat.repository.ChatRoomMemberRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ChatRoomService {
 
-    private final ChatRoomRepository chatRoomRepository;
+    private final ChatRoomMemberRepository chatRoomRepository;
 
     public String create(String issueTitle) {
         ChatRoom chatRoom = chatRoomRepository.save(ChatRoom.create(issueTitle));

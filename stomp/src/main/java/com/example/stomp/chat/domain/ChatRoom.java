@@ -38,7 +38,7 @@ public class ChatRoom extends BaseEntity {
     private ChatTrialStage trialStage;
 
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ChatMember> members;
+    private List<ChatRoomMember> members;
 
     @Column(nullable = false)
     private LocalDateTime lastActivedAt;
@@ -56,7 +56,7 @@ public class ChatRoom extends BaseEntity {
 
     public void join(Member member, String nickname) {
         validateIfJoinable();
-        this.members.add(ChatMember.create(this, member, nickname));
+        this.members.add(ChatRoomMember.create(this, member, nickname));
     }
 
     public void leave(Long memberId) {

@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
-public class ChatMember extends BaseEntity {
+public class ChatRoomMember extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chat_room_uuid", referencedColumnName = "chat_room_uuid", nullable = false)
@@ -43,8 +43,8 @@ public class ChatMember extends BaseEntity {
     @Column(nullable = true)
     private Long readSequence;
 
-    protected static ChatMember create(ChatRoom chatRoom, Member member, String nickname) {
-        return new ChatMember(chatRoom, member, nickname, PersonelTrialStage.JOINED, null);
+    protected static ChatRoomMember create(ChatRoom chatRoom, Member member, String nickname) {
+        return new ChatRoomMember(chatRoom, member, nickname, PersonelTrialStage.JOINED, null);
     }
 
 }

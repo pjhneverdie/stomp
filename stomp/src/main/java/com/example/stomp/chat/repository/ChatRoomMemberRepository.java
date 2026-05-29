@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
+public interface ChatRoomMemberRepository extends JpaRepository<ChatRoom, Long> {
 
         Optional<ChatRoom> findByUuid(String chatRoomUUID);
 

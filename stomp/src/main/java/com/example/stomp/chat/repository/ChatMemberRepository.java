@@ -6,14 +6,25 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.example.stomp.chat.domain.ChatMember;
+import com.example.stomp.chat.domain.ChatRoomMember;
 import com.example.stomp.chat.dto.ChatCacheChunk;
 import com.example.stomp.chat.dto.ChatCacheChunk.ChatMemberMeta;
 
-public interface ChatMemberRepository extends JpaRepository<ChatMember, Long> {
+public interface ChatMemberRepository extends JpaRepository<ChatRoomMember, Long> {
+
+
+       @Query("select crm from ChatRoomMember crm")
+
+
+
+
+
+
+
+
 
         @Query("select cm from ChatMember cm join fetch cm.chatRoom where cm.member.id = :memberId")
-        List<ChatMember> findAllByMemberIdWithChatRoom(@Param("memberId") Long memberId);
+        List<ChatRoomMember> findAllByMemberIdWithChatRoom(@Param("memberId") Long memberId);
 
         @Query("select cm.chatRoom.uuid from ChatMember cm where cm.member.id = :memberId")
         List<String> findChatRoomUuidsByMemberId(@Param("memberId") Long memberId);
