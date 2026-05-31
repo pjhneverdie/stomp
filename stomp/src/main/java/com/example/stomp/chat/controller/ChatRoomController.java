@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RestController
 @RequestMapping("/chat")
 @RequiredArgsConstructor
-public class ChatController {
+public class ChatRoomController {
 
     private ChatRoomService chatRoomService;
 

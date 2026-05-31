@@ -1,5 +1,7 @@
 spring:
   config:
+    activate:
+      on-profile: test
     import:
       - optional:classpath:/yml/test/application-test-login.yml
       - optional:classpath:/yml/test/application-test-mysql.yml

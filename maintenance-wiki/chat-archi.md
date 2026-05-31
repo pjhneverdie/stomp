@@ -7,6 +7,48 @@
 
 
 ### 채팅 발생시,
+**0. redis 해당 채팅방 시퀀스 관리용 string incr**
+<p style="line-height: 160%;">
+(프론트에서 진행)
+<br>
+순서 보장을 위해 seq를 중앙 관리해야 함.
+<br>
+redis incr은 race condition이어도 안 겹침. 
+<br>
+문제는 해당 캐시에는 TTL이 있어서 fillback 로직에서 race condition 위험이 있음.
+</p>
+
+<p style="line-height: 160%;">
+1. a mysql에서 가져옴, 
+<br>
+2. b mysql에서 가져옴, 
+<br>
+3. a fillback 완료 후 INCR, 
+<br>
+4. b fillback 완료 후 INCR -> a랑 b가 같은 seq를 가지고 있음.
+</p>
+
+<p style="line-height: 160%;">
+흔하진 않지만 이론상 가능하고 상당히 치명적 엣지 케이스임.
+<br>
+fillback은 아래처럼 해야 함.
+</p>
+
+<p style="line-height: 160%;">
+1. GET
+<br>
+2. TTL 때문에 데이터 없으면
+<br>
+3. SET lock:key uuid NX EX 3 시도
+<br>
+4. 락 획득 성공한 1명만 DB fillback
+<br>
+5. cache set
+<br>
+6. unlock
+</p>
+
+조회가 들어가 있는 1, 2, 3은 lua script 씀. 5, 6은 파이프라이닝.
 
 **1. 채팅 서버 -> kafka에 메시지 produce**
 <p style="line-height: 160%;">
@@ -47,49 +89,7 @@ sender 웹소켓에 메시지 전송 실패 메시지 publish.
 </p>
 
 
-
-**2.1. redis 해당 채팅방 시퀀스 관리용 string incr**
-<p style="line-height: 160%;">
-순서 보장을 위해 seq를 중앙 관리해야 함.
-<br>
-redis incr은 race condition이어도 안 겹침. 
-<br>
-문제는 해당 캐시에는 TTL이 있어서 fillback 로직에서 race condition 위험이 있음.
-</p>
-
-<p style="line-height: 160%;">
-1. a mysql에서 가져옴, 
-<br>
-2. b mysql에서 가져옴, 
-<br>
-3. a fillback 완료 후 INCR, 
-<br>
-4. b fillback 완료 후 INCR -> a랑 b가 같은 seq를 가지고 있음.
-</p>
-
-<p style="line-height: 160%;">
-흔하진 않지만 이론상 가능하고 상당히 치명적 엣지 케이스임.
-<br>
-fillback은 아래처럼 해야 함.
-</p>
-
-<p style="line-height: 160%;">
-1. GET
-<br>
-2. TTL 때문에 데이터 없으면
-<br>
-3. SET lock:key uuid NX EX 3 시도
-<br>
-4. 락 획득 성공한 1명만 DB fillback
-<br>
-5. cache set
-<br>
-6. unlock
-</p>
-
-조회가 들어가 있는 1, 2, 3은 lua script 씀. 5, 6은 파이프라이닝.
-
-**2.2. 메시지 컨슘해서 redis 해당 방 최근 메시지 zset에 zadd**
+**2.1. 메시지 컨슘해서 redis 해당 방 최근 메시지 zset에 zadd**
 read source write 실패 시 sender 웹소켓에 메시지 전송 실패 메시지 publish.
 <p style="line-height: 160%;">
 zadd 전 incr은 성공했는데 zadd 실패했다고 메시지 전송 실패 처리하면
@@ -105,7 +105,14 @@ zadd 전 incr은 성공했는데 zadd 실패했다고 메시지 전송 실패 �
 컨슈머가 kafka commit 처리해서 해당 메시지 log 없애버림.
 </p>
 
-**2.3. recipient 웹소켓에 메시지 publish, sender 웹소켓에는 ACK publish**
+**2.2. recipient 웹소켓에 메시지 publish, sender 웹소켓에는 ACK publish**
+**2.3. mysql insert 담당 topic에 produce**
+<p style="line-height: 160%;">
+read source를 담당하는 topic이랑 mysql insert를 담당하는 topic이 다름.
+<br>
+read source 성공하면 mysql topic에 메시지를 또 쏘는 거임.
+</p>
+
 **2.4. 메시지 일정량 쌓이거나 일정 주기로 mysql bulk insert**
 
 **3. redis 채팅방 목록 불러오기, 최근 메시지 캐싱 기능 구현 상세**
@@ -231,3 +238,142 @@ unreadCount도 마찬가지 유저가 채팅방에 들어와서 0으로 초기�
 <br>
 더 이상 채팅은 못 할지언정 데이터가 날아가거나 정합성 깨지는 일 없음.
 </p>
+
+### 채팅방 UX
+
+**1. 일단 보냈다고 optimistic response**
+state pending으로 해놓고 일단 성공한 것처럼 메시지 버블 그림.
+
+**2. optimistic response 때문에 발생할 수 있는 문제**
+<p style="line-height: 160%;">
+지금 구조는 일단 보냈다고 ui 처리하고
+<br>
+나중에 웹소켓으로 성패 여부를 받아서
+<br>
+실패하면 실패 ui로 다시 그리는 건데.
+</p>
+
+**2.1. 채팅 사라짐 이슈**
+<p style="line-height: 160%;">
+만약 서버에 메시지가 너무 몰려서 해당 메세지는 작업 시도 조차 못 했을 때
+<br>
+새로고침 시 read source에서 채팅 내역을 불러왔을 때 해당 메시지가 없을 거고
+<br>
+유저 화면에서 아까 optimistic response 그린 메시지 버블이 사라질 거임.
+</p>
+
+**2.2. 채팅 사라짐 이슈 해결법**
+<p style="line-height: 160%;">
+이 경우 메시지를 보내면 웹 브라우저 로컬 스토리지에 미확정 메시지로 캐싱하고
+<br>
+새로고침 시 처음에 했던 것처럼 state pending으로 해놓고 일단 성공한 것처럼 메시지 버블 그림.
+<br>
+나중에 성패 여부가 도착하면 state update, 로컬 스토리지에서 삭제, 결과에 맞춰 ui를 다시 그리면 됨.
+</p>
+
+
+**3. 신호 놓침 이슈**
+2번까지는 해결이 된 상태에서,
+
+<p style="line-height: 160%;">
+유저가 오프라인 등 어떤 이유로 웹소켓 신호 전달을 놓치면 어떻게 될까?
+<br>
+이대로라면 실시간 신호를 놓친 메시지는 실패했어도
+<br>
+성공한 채팅 메시지 버블로 남음.
+</p>
+
+<p style="line-height: 160%;">
+보통 신호 전달 놓치는 이유가 유저가 접속을 안 해서 에초에 웹소켓이 연결이 안 돼 있었거나
+<br>
+잠깐 사정이 있어서 끊긴 경우인데,
+</p>
+
+<p style="line-height: 160%;">
+웹소켓이 다시 연결되면 read source를 한 번 때려서 read source에 있으면
+<br>
+state update, 로컬 스토리지에서 삭제, 결과에 맞춰 ui를 다시 그리면 해결.
+<br>
+새로고침하면서 자연스럽게 검증한다는 거임.
+</p>
+
+<p style="line-height: 160%;">
+근데 없다고 해보자. 이때는 바로 실패 처리하면 안 됨.
+<br>
+왜냐 '진짜 실패'인지, '아직 처리 전'인지 알 수가 없음.
+</p>
+
+<p style="line-height: 160%;">
+도돌이표임. 아까 말했지만 메시지가 졸라 쌓여 있어서
+<br>
+컨슈머가 못 꺼내와서 read source에 넣는 작업 자체가 시작 전일 수도 있음.
+</p>
+
+<p style="line-height: 160%;">
+메시지 실패를 확정지을 수 있는 유일한 방법은
+<br>
+read source에 해당 메시지 seq보다 더 큰 seq가 있는 상태에서 해당 메시지의 존재 여부임.
+<br>
+== 이미 처리됐는데 웹소켓 신호를 못 받은 거.
+</p>
+
+그래서 이 read source 조회 방식은 쓰면 안 됨.
+
+**3.1 신호 놓침 이슈 해결법**
+<p style="line-height: 160%;">
+이렇게 할 바에 차라리 kafka에 메시지를 발행할 때 바디에 timestamp를 찍어버리고
+<br>
+10초 안에 처리 못한 메시지는 걍 컨슈머에서 처리 안 해버리기로 약속함.
+</p>
+
+<p style="line-height: 160%;">
+그리고 프론트에서 optimistic response할 때 타임 아웃 걸어서 넉넉하게 15초안에 상태 변경 안 되면 
+<br>
+걍 못 보낸 거로 확정 지어버리면 됨.
+</p>
+
+<p style="line-height: 160%;">
+앞으로의 과제는 15초 지나서 취소 처리 된 메시지는
+<br>
+반드시 서버에서 버려서 대원칙을 준수해야 함.
+</p>
+
+<p style="line-height: 160%;">
+그럼 서버 입장에서 같이 생각해보면
+<br>
+서버 메시지 처리 로직은
+</p>
+
+0. pre-chat consumer가 consume
+1. pre-chat consumer가 redis read source 반영 
+2. pre-chat consumer가 웹소켓에 성공/실패 여부 반영
+3. pre-chat consumer에서 mysql insert 역할 success-topic에 produce인데
+
+<p style="line-height: 160%;">
+0. consumer가 컨슘했는데 10초 지났다 -> 실패 메시지 전송(이거 못 받아도 어차피 15초 뒤에 자동 실패 처리되니까 OK).
+<br>
+1~2. redis 실패 시 -> 실패 메시지 전송(이거 못 받아도 어차피 15초 뒤에 자동 실패 처리되니까 OK).
+<br>
+1~2. redis 성공 시 -> 성공 메시지 전송(이거 못 받으면 15초 뒤에 성공했는데도 실패한 것처럼 됨).
+</p>
+
+<p style="line-height: 160%;">
+3. mysql insert 역할 success-topic에 produce 시도 ->
+<br>
+3.1 produce 실패 시 -> <span style="font-weight: bold">DLQ에 넣어서 소실 절때 없이 무조건 될 때까지 produce 성공 시켜야 함.</span>
+
+웹소켓에 성공 메시지 전송했고, mysql insert 전 당장 조회는 redis가 버티고 있음.
+kafka <-> pre-chat consumer 간 일시적 네트워크 끊김이면 DLQ로 바로 커버 됨
+</p>
+
+<p style="line-height: 160%;">
+여기서 문제가 되는 건 성공 메시지 전달이 안 됐고 15초가 지나서 프론트에서 성공했는데도 
+<br>
+실패 처리 되는 상황임.
+</span>
+
+<p style="line-height: 160%;">
+프론트에서 실패 처리 전에 api 쏴서 redis에 존재하냐 안 하냐만 보면 됨.
+<br>
+에초에 이런 일 발생이 거의 없기 때문에 api 매번 호출 안 됨 부담 없음.
+</span>

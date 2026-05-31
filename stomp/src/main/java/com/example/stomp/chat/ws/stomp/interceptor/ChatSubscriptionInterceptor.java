@@ -34,6 +34,11 @@ public class ChatSubscriptionInterceptor implements ChannelInterceptor {
         }
 
         switch (accessor.getCommand()) {
+            case SEND: {
+                // 메시지 roomUuid 없으면 거절 등 validation.
+
+            }
+                break;
             /**
              * This is for the first time subscription of the chatroom.
              */
