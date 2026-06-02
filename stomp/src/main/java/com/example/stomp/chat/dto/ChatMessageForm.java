@@ -1,9 +1,15 @@
 package com.example.stomp.chat.dto;
 
-public record ChatMessageForm() {
+import com.example.stomp.chat.dto.ChatMessageSendReq.ChatMsgInfo;
+import com.example.stomp.chat.dto.ChatMessageSendReq.SenderInfo;
+
+public record ChatMessageForm(String roomUuid, String content, Long seq, Long memberId) {
 
     public ChatMessageSendReq toReq() {
-        return new ChatMessageSendReq();
+        return ChatMessageSendReq.init(
+            new ChatMsgInfo(
+                roomUuid, Long.valueOf(System.currentTimeMillis()), content, seq),
+                new SenderInfo(memberId));
     }
 
 }

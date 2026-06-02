@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.example.stomp.chat.domain.ChatMessage;
 import com.example.stomp.chat.dto.ChatMessageSendReq;
+import com.example.stomp.chat.dto.ChatMessageSendReq.RecipientInfo;
 
 import lombok.RequiredArgsConstructor;
 
@@ -16,12 +17,27 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ChatMsgProducer {
 
+    private final ChatCacheService cacheService;
     private final KafkaTemplate<String, ChatMessageSendReq> kafkaTemplate;
 
     private final ChatMsgPublisher chatMsgPublisher;
 
     public void sendMessage(ChatMessageSendReq req) {
-        CompletableFuture<SendResult<String, ChatMessageSendReq>> future = kafkaTemplate.send("chat-topic", req);
+        String sMemberId = String.valueOf(req.getSenderInfo().getMemberId());
+
+        try {
+            // 1. Find recipient to send.
+            Long rMemberId = cacheService.findRecipientMemberId(sMemberId,
+                    req.getMsgInfo().roomUuid());
+
+            req.setRecipientInfo(new RecipientInfo(rMemberId));
+        } catch (Exception e) {
+            chatMsgPublisher.pubFailure();
+        }
+        
+        CompletableFuture<SendResult<String, ChatMessageSendReq>> future = kafkaTemplate.send(
+                "chat-send-topic",
+                req);
 
         future.whenComplete((result, ex) -> {
             if (ex == null) {
@@ -29,7 +45,7 @@ public class ChatMsgProducer {
             } else {
                 System.err.println("카프카 전송 실패! 원인: " + ex.getMessage());
 
-                chatMsgPublisher.pub();
+                chatMsgPublisher.pubFailure();
             }
         });
     }

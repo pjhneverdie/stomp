@@ -11,7 +11,11 @@ public class ChatMsgPublisher {
 
     private final SimpMessageSendingOperations messagingTemplate;
 
-    public void pub() {
+    public void pubFailure() {
+
+    }
+
+    public void pubSuccess() {
 
     }
 
