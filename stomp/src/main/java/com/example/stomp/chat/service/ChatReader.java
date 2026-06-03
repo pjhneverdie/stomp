@@ -12,7 +12,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
-import com.example.stomp.app.constant.RedisConstant;
+import com.example.stomp.app.constant.RedisKeys;
 import com.example.stomp.chat.document.RoomPreview;
 
 import lombok.RequiredArgsConstructor;
@@ -41,7 +41,7 @@ public class ChatReader {
         // 1.
         Set<ZSetOperations.TypedTuple<String>> zset = redisTemplate.opsForZSet()
                 .reverseRangeWithScores(
-                        RedisConstant.memberRooms(memberId),
+                        RedisKeys.memberRooms(memberId),
                         start,
                         end);
 
@@ -67,7 +67,7 @@ public class ChatReader {
                     StringRedisConnection redis = (StringRedisConnection) connection;
 
                     for (String roomUuid : roomUuids) {
-                        redis.hGetAll(RedisConstant.roomPreview(memberId, roomUuid));
+                        redis.hGetAll(RedisKeys.roomPreview(memberId, roomUuid));
                     }
 
                     return null;
@@ -85,7 +85,7 @@ public class ChatReader {
 
     private void putFromScoreToLastMessagedAt(List<Map<String, String>> previewMaps, Map<String, Double> mapZSET) {
         previewMaps.forEach(map -> {
-            Double score = mapZSET.get(map.get(RedisConstant.ROOM_PREVIEW_HFKEY_UUID));
+            Double score = mapZSET.get(map.get(RedisKeys.ROOM_PREVIEW_HFKEY_UUID));
 
             if (score != null) {
                 map.put(

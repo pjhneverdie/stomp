@@ -10,7 +10,7 @@ import com.example.stomp.chat.domain.ChatRoom;
 import com.example.stomp.chat.dto.ChatExceptions;
 import com.example.stomp.chat.dto.ChatCacheChunk;
 import com.example.stomp.chat.dto.ChatCacheChunk.ChatRoomMeta;
-import com.example.stomp.chat.dto.ChatJoinRequest;
+import com.example.stomp.chat.dto.ChatRoomJoinReq;
 import com.example.stomp.chat.repository.ChatRoomMemberRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -29,24 +29,28 @@ public class ChatRoomService {
         return uuid;
     }
 
-    public void join(ChatJoinRequest joinRequest) {
-        ChatRoom chatRoom = chatRoomRepository.fetchJoinByUuidWithMembers(joinRequest.roomUUID()).orElseThrow(() -> {
-            throw new AppException(ChatExceptions.UNEXISTS_CHAT);
-        });
+    // public ChatRoom findByUuidOrElseThrow(String uuid) {
+    //     return chatRoomRepository.fetchJoinByUuidWithMembers(uuid).orElseThrow(() -> {
+    //         throw new AppException(ChatExceptions.UNEXISTS_CHAT);
+    //     });
+    // }
 
-        chatRoom.join(joinRequest.member(), joinRequest.nickname());
-    }
+    // public ChatRoom join(ChatRoomJoinReq joinRequest) {
+    //     ChatRoom chatRoom = findByUuidOrElseThrow(joinRequest.roomUuid());
+    //     chatRoom.join(joinRequest.member(), joinRequest.nickname());
+    //     return chatRoom;
+    // }
 
-    public ChatRoom getByUUIDWithMembers(String uuid) {
-        return chatRoomRepository.fetchJoinByUuidWithMembers(uuid).orElseThrow(() -> {
-            throw new AppException(ChatExceptions.UNEXISTS_CHAT);
-        });
+    // public ChatRoom getByUUIDWithMembers(String uuid) {
+    //     return chatRoomRepository.fetchJoinByUuidWithMembers(uuid).orElseThrow(() -> {
+    //         throw new AppException(ChatExceptions.UNEXISTS_CHAT);
+    //     });
 
-    }
+    // }
 
-    public List<ChatRoomMeta> getAllChatRoomMetaByRoomUuid(List<String> roomUuids) {
-        return chatRoomRepository.findAllChatRoomMetasByRoomUuid(roomUuids);
-    }
+    // public List<ChatRoomMeta> getAllChatRoomMetaByRoomUuid(List<String> roomUuids) {
+    //     return chatRoomRepository.findAllChatRoomMetasByRoomUuid(roomUuids);
+    // }
 
     // public void leave(String roomUUID, Long memberId) {
     // chatRoomRepository.fetchJoinByUuidWithMembers(roomUUID).ifPresent((chatRoom)

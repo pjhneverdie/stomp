@@ -3,13 +3,13 @@ package com.example.stomp.chat.dto;
 import com.example.stomp.chat.dto.ChatMessageSendReq.ChatMsgInfo;
 import com.example.stomp.chat.dto.ChatMessageSendReq.SenderInfo;
 
-public record ChatMessageForm(String roomUuid, String content, Long seq, Long memberId) {
+public record ChatMessageForm(String roomUuid, String content, Long seq, Long chatMemberId, Long memberId) {
 
     public ChatMessageSendReq toReq() {
         return ChatMessageSendReq.init(
-            new ChatMsgInfo(
-                roomUuid, Long.valueOf(System.currentTimeMillis()), content, seq),
-                new SenderInfo(memberId));
+                new ChatMsgInfo(
+                        roomUuid, Long.valueOf(System.currentTimeMillis()), content, seq),
+                new SenderInfo(chatMemberId, memberId));
     }
 
 }

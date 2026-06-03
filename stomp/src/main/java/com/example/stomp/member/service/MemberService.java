@@ -49,7 +49,7 @@ public class MemberService extends OidcUserService {
                                 });
         }
 
-        public Member getMemberById(Long id) {
+        public Member findByIdOrElseThrow(Long id) {
                 return memberRepository.findById(id).orElseThrow(() -> {
                         throw new AppException(MemberExceptions.UNEXISTS_MEMBER);
                 });

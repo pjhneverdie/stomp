@@ -1,5 +1,7 @@
 package com.example.stomp.chat.dto;
 
+import com.example.stomp.chat.domain.MessageType;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,18 +16,17 @@ public class ChatMessageSendReq {
     @Setter
     private RecipientInfo recipientInfo;
 
-    public static record ChatMsgInfo(String roomUuid, Long createdAt, String content, Long seq) {
+    public static record ChatMsgInfo(String roomUuid, Long createdAt, String content, Long seq,
+            MessageType messageType) {
     }
 
-    @AllArgsConstructor
-    @Getter
-    public static class SenderInfo {
-        private Long memberId;
+    public static record SenderInfo(Long chatRoomMemberId, Long memberId) {
     }
 
     @AllArgsConstructor
     @Getter
     public static class RecipientInfo {
+        private Long chatRoomMemberId;
         private Long memberId;
     }
 

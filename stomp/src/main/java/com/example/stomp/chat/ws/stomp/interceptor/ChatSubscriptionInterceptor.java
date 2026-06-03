@@ -8,7 +8,7 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 
 import com.example.stomp.app.util.StompHeaderUtil;
-import com.example.stomp.chat.dto.ChatJoinRequest;
+import com.example.stomp.chat.dto.ChatRoomJoinReq;
 import com.example.stomp.chat.service.ChatRoomService;
 import com.example.stomp.member.service.MemberService;
 
@@ -47,7 +47,7 @@ public class ChatSubscriptionInterceptor implements ChannelInterceptor {
                 String roomUUID = (String) accessor.getHeader("roomUUID");
 
                 chatRoomService.join(
-                        new ChatJoinRequest(roomUUID,
+                        new ChatRoomJoinReq(roomUUID,
                                 memberService.getMemberById(StompHeaderUtil.getPrincipal(accessor).getId()),
                                 nickname));
             }

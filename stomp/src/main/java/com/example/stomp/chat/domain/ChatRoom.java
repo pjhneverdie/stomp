@@ -59,6 +59,14 @@ public class ChatRoom extends BaseEntity {
         this.members.add(ChatRoomMember.create(this, member, nickname));
     }
 
+    public ChatRoomMember getChatRoomMemberById(Long memberId) {
+        return this.members.stream()
+                .filter((chatRoomMember) -> chatRoomMember.getId() == memberId).findFirst()
+                .orElseThrow(() -> {
+                    throw new AppException(ChatExceptions.UNEXISTS_CHAT_ROOM_MEMBER);
+                });
+    }
+
     public void leave(Long memberId) {
         this.members.removeIf(m -> m.getId().equals(memberId));
     }

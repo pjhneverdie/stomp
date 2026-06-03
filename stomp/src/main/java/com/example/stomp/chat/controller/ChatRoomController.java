@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.stomp.app.dto.ApiResponse;
 import com.example.stomp.chat.dto.ChatRoomForm;
-import com.example.stomp.chat.service.ChatRoomService;
+import com.example.stomp.chat.service.ChatFacade;
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,11 +17,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RequiredArgsConstructor
 public class ChatRoomController {
 
-    private ChatRoomService chatRoomService;
+    private ChatFacade chatFacade;
 
     @PostMapping("/create")
     public ApiResponse<String> create(@RequestBody ChatRoomForm.Create form) {
-        return ApiResponse.createDefaultSuccessResponse(chatRoomService.create(form.name()));
+        return ApiResponse.createDefaultSuccessResponse(chatFacade.create(form.issueTitle()));
+    }
+
+    @PostMapping("/join")
+    public ApiResponse<String> create(@RequestBody ChatRoomForm.Join form) {
+        return ApiResponse
+                .createDefaultSuccessResponse(chatFacade.join(form.memberId(), form.roomUuid(), form.nickname()));
     }
 
 }
