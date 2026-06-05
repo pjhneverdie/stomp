@@ -1,17 +1,13 @@
 package com.example.stomp.chat.service;
 
-import java.util.List;
-
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.example.stomp.app.dto.exception.AppException;
 import com.example.stomp.chat.domain.ChatRoom;
+import com.example.stomp.chat.domain.ChatTrialStage;
 import com.example.stomp.chat.dto.ChatExceptions;
-import com.example.stomp.chat.dto.ChatCacheChunk;
-import com.example.stomp.chat.dto.ChatCacheChunk.ChatRoomMeta;
 import com.example.stomp.chat.dto.ChatRoomJoinReq;
-import com.example.stomp.chat.repository.ChatRoomMemberRepository;
+import com.example.stomp.chat.repository.ChatRoomRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,44 +15,24 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ChatRoomService {
 
-    private final ChatRoomMemberRepository chatRoomRepository;
+    private final ChatRoomRepository chatRoomRepository;
 
-    public String create(String issueTitle) {
-        ChatRoom chatRoom = chatRoomRepository.save(ChatRoom.create(issueTitle));
+    public String create(Long memberId, String issueTitle) {
+        if (chatRoomRepository.findByMemberIdWithMembers(memberId).stream()
+                .filter(cr -> !cr.getTrialStage().equals(ChatTrialStage.JUDGED)).count() >= 1) {
+            throw new AppException(ChatExceptions.ONGOING_CHAT_EXISTS);
+        }
 
-        String uuid = chatRoom.getUuid();
-
-        return uuid;
+        return chatRoomRepository.save(ChatRoom.create(issueTitle)).getUuid();
     }
 
-    // public ChatRoom findByUuidOrElseThrow(String uuid) {
-    //     return chatRoomRepository.fetchJoinByUuidWithMembers(uuid).orElseThrow(() -> {
-    //         throw new AppException(ChatExceptions.UNEXISTS_CHAT);
-    //     });
-    // }
+    public ChatRoom join(ChatRoomJoinReq req) {
+        ChatRoom chatRoom = chatRoomRepository.findByUuidWithMembers(req.chatRoomUuid())
+                .orElseThrow(() -> new AppException(ChatExceptions.UNEXISTS_CHAT));
 
-    // public ChatRoom join(ChatRoomJoinReq joinRequest) {
-    //     ChatRoom chatRoom = findByUuidOrElseThrow(joinRequest.roomUuid());
-    //     chatRoom.join(joinRequest.member(), joinRequest.nickname());
-    //     return chatRoom;
-    // }
+        chatRoom.join(req.member(), req.nickname());
 
-    // public ChatRoom getByUUIDWithMembers(String uuid) {
-    //     return chatRoomRepository.fetchJoinByUuidWithMembers(uuid).orElseThrow(() -> {
-    //         throw new AppException(ChatExceptions.UNEXISTS_CHAT);
-    //     });
-
-    // }
-
-    // public List<ChatRoomMeta> getAllChatRoomMetaByRoomUuid(List<String> roomUuids) {
-    //     return chatRoomRepository.findAllChatRoomMetasByRoomUuid(roomUuids);
-    // }
-
-    // public void leave(String roomUUID, Long memberId) {
-    // chatRoomRepository.fetchJoinByUuidWithMembers(roomUUID).ifPresent((chatRoom)
-    // -> {
-    // chatRoom.leave(memberId);
-    // });
-    // }
+        return chatRoom;
+    }
 
 }

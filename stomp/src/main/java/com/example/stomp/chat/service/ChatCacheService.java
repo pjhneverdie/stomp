@@ -101,15 +101,11 @@ public class ChatCacheService {
                                                                 chatMsgInfo.messageType(),
                                                                 chatMsgInfo.createdAt());
 
-                                                // 중요: 파티션과 오프셋 정보도 Outbox 관리를 위해 ARGV나 별도 로직에 태워야 합니다.
-                                                // 만약 Lua 스크립트 내부에서 Outbox 데이터도 같이 쌓는다면 ARGV에 req.getKafkaPartition(),
-                                                // req.getKafkaOffset()을 추가로 던지세요!
                                                 String msgJson = objectMapper.writeValueAsString(msg);
 
-                                                // 2. 파이프라인용 operations 객체에 Lua 스크립트 명령을 쌓아둡니다 (실제 전송 X, 대기열에 추가)
                                                 operations.execute(
                                                                 chatLua.updatePersonelViewAndRecentMessage(),
-                                                                (List<K>) keys, // 제네릭 타입 캐스팅
+                                                                (List<K>) keys, 
                                                                 String.valueOf(chatMsgInfo.createdAt()),
                                                                 roomUuid,
                                                                 chatMsgInfo.content(),

@@ -11,13 +11,13 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class ChatFacade {
+public class ChatRoomFacade {
     private final MemberService memberService;
     private final ChatRoomService chatRoomService;
     private final ChatCacheService chatCacheService;
 
-    public String create(String issueTitle) {
-        return chatRoomService.create(issueTitle);
+    public String create(Long memberId, String issueTitle) {
+        return chatRoomService.create(memberId, issueTitle);
     }
 
     public String join(Long memberId, String roomUuid, String nickname) {

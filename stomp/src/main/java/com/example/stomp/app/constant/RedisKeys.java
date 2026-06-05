@@ -5,8 +5,12 @@ public final class RedisKeys {
     private RedisKeys() {
     }
 
+    public static String chatMessageOutbox() {
+        return "outbox:chat_message";
+    }
+
     public static String recent50(String roomUuid) {
-        return "chat:%s:recent50".formatted(roomUuid);
+        return "chat_room:%s:recent50".formatted(roomUuid);
     }
 
     public static String memberRooms(String memberId) {
@@ -19,12 +23,12 @@ public final class RedisKeys {
 
     // room members (set)
     public static String roomMembers(String roomUuid) {
-        return "room:%s:members".formatted(roomUuid);
+        return "chat_room:%s:members".formatted(roomUuid);
     }
 
     // room member (hash)
     public static String roomMember(String roomUuid, String chatRoomMemberId) {
-        return "room:%s:member:%s".formatted(roomUuid, chatRoomMemberId);
+        return "chat_room:%s:member:%s".formatted(roomUuid, chatRoomMemberId);
     }
 
     // room member hash fields

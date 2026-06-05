@@ -1,7 +1,5 @@
 package com.example.stomp.chat.domain;
 
-import java.time.LocalDateTime;
-
 import com.example.stomp.app.domain.BaseEntity;
 import com.example.stomp.member.domain.Member;
 
@@ -40,11 +38,8 @@ public class ChatRoomMember extends BaseEntity {
     @Column(nullable = false)
     private PersonelTrialStage trialStage;
 
-    @Column(nullable = true)
-    private Long readSequence;
-
     protected static ChatRoomMember create(ChatRoom chatRoom, Member member, String nickname) {
-        return new ChatRoomMember(chatRoom, member, nickname, PersonelTrialStage.JOINED, null);
+        return new ChatRoomMember(chatRoom, member, nickname, PersonelTrialStage.JOINED);
     }
 
 }

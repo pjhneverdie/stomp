@@ -48,14 +48,11 @@ public class ChatRoom extends BaseEntity {
                 LocalDateTime.of(1970, 1, 1, 0, 0));
     }
 
-    private void validateIfJoinable() {
+    public void join(Member member, String nickname) {
         if (this.members.size() >= 2) {
             throw new AppException(ChatExceptions.MAX_CAPACITY_EXCEEDED);
         }
-    }
 
-    public void join(Member member, String nickname) {
-        validateIfJoinable();
         this.members.add(ChatRoomMember.create(this, member, nickname));
     }
 

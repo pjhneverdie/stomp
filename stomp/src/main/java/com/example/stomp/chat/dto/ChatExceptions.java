@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public enum ChatExceptions implements ExceptionInfo {
+    ONGOING_CHAT_EXISTS(HttpStatus.BAD_REQUEST, "ongoing trial exists."),
     UNEXISTS_CHAT_ROOM_MEMBER(HttpStatus.BAD_REQUEST, "Unexisting member."),
     UNEXISTS_CHAT(HttpStatus.BAD_REQUEST, "Multiple session is not allowed"),
     MAX_CAPACITY_EXCEEDED(HttpStatus.BAD_REQUEST, "You're not the invited"),
