@@ -1,7 +1,6 @@
 package com.example.stomp.member.dto;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import com.example.stomp.member.domain.Credential;
 import com.example.stomp.member.domain.Member;
@@ -13,9 +12,8 @@ public record Me(
         MemberRole role,
         Integer balance,
         LocalDateTime lastFreeAwardedAt,
-        LocalDateTime lastAdAwardedAt,
-        List<String> joinedRoomUUIDs) {
-    public static Me of(Member member, List<String> joinedRoomUUIDs) {
+        LocalDateTime lastAdAwardedAt) {
+    public static Me from(Member member) {
         Credential credential = member.getCredential();
         return new Me(
                 member.getEmail(),
@@ -23,7 +21,6 @@ public record Me(
                 member.getRole(),
                 credential.getBalance(),
                 credential.getLastFreeAwardedAt(),
-                credential.getLastAdAwardedAt(),
-                joinedRoomUUIDs);
+                credential.getLastAdAwardedAt());
     }
 }

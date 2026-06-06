@@ -21,17 +21,14 @@ public final class RedisKeys {
         return "member:%s:room_preview:%s".formatted(memberId, roomUuid);
     }
 
-    // room members (set)
     public static String roomMembers(String roomUuid) {
         return "chat_room:%s:members".formatted(roomUuid);
     }
 
-    // room member (hash)
     public static String roomMember(String roomUuid, String chatRoomMemberId) {
         return "chat_room:%s:member:%s".formatted(roomUuid, chatRoomMemberId);
     }
 
-    // room member hash fields
     public static final String ROOM_MEMBER_HFKEY_MEMBER_ID = "member_id";
     public static final String ROOM_MEMBER_HFKEY_NICKNAME = "nickname";
 

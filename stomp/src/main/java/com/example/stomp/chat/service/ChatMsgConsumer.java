@@ -10,6 +10,7 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 
 import com.example.stomp.chat.dto.ChatMessageSendReq;
+import com.example.stomp.chat.repository.ChatCacheService;
 
 import lombok.RequiredArgsConstructor;
 

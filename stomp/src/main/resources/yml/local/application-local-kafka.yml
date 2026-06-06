@@ -8,17 +8,17 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      properties:
-        spring.json.type.mapping: "order:com.producer.dto.OrderDto"
+#      properties:
+#        spring.json.type.mapping: "order:com.producer.dto.OrderDto"
 
     consumer:
       group-id: chat-consumer-group
       auto-offset-reset: latest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: "*"
-        spring.json.type.mapping: "order:com.consumer.dto.OrderDto"
+#      properties:
+#        spring.json.trusted.packages: "*"
+#        spring.json.type.mapping: "order:com.consumer.dto.OrderDto"
       max-poll-records: 50
 
     listener:

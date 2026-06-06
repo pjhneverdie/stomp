@@ -7,7 +7,7 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.stomp.app.dto.exception.AppException;
+import com.example.stomp.app.dto.AppException;
 import com.example.stomp.member.domain.Member;
 import com.example.stomp.member.dto.MemberExceptions;
 import com.example.stomp.member.dto.OidcMemberPrincipal;
@@ -49,7 +49,7 @@ public class MemberService extends OidcUserService {
                                 });
         }
 
-        public Member findByIdOrElseThrow(Long id) {
+        public Member findById(Long id) {
                 return memberRepository.findById(id).orElseThrow(() -> {
                         throw new AppException(MemberExceptions.UNEXISTS_MEMBER);
                 });

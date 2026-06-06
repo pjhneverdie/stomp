@@ -3,8 +3,7 @@ package com.example.stomp.chat.service;
 import org.springframework.stereotype.Service;
 
 import com.example.stomp.chat.domain.ChatRoom;
-import com.example.stomp.chat.dto.ChatCacheReq.ChatRoomMemberCacheReq;
-import com.example.stomp.chat.dto.ChatRoomJoinReq;
+import com.example.stomp.chat.repository.ChatCacheService;
 import com.example.stomp.member.service.MemberService;
 
 import lombok.RequiredArgsConstructor;
@@ -21,16 +20,16 @@ public class ChatRoomFacade {
     }
 
     public String join(Long memberId, String roomUuid, String nickname) {
-        ChatRoom chatRoom = chatRoomService.join(
-                new ChatRoomJoinReq(
-                        memberService.findByIdOrElseThrow(memberId), roomUuid, nickname));
+        ChatRoom chatRoom = chatRoomService.findByUuidWithMembers(roomUuid);
 
-        chatCacheService.cacheChatRoomMember(
-                new ChatRoomMemberCacheReq(
-                        String.valueOf(memberId),
-                        roomUuid,
-                        String.valueOf(chatRoom.getChatRoomMemberById(memberId).getId()),
-                        nickname));
+        chatRoom.join(memberService.findById(memberId), nickname);
+
+        chatCacheService.cacheJoinedMemberInfo(
+                String.valueOf(memberId),
+                roomUuid,
+                String.valueOf(
+                        chatRoom.getChatRoomMemberById(memberId).getId()),
+                nickname);
 
         return chatRoom.getUuid();
     }

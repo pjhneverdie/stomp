@@ -11,6 +11,5 @@ public class StompApplication {
 		SpringApplication.run(StompApplication.class, args);
 	}
 
+	// ./gradlew bootRun --args='--spring.profiles.active=local'
 }
-
-

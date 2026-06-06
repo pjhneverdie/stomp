@@ -1,169 +1,126 @@
 services:
+  # ========================
+  # Kafka Cluster
+  # ========================
   kafka-1:
     image: confluentinc/cp-kafka:8.1.3
-    hostname: kafka-1
     container_name: kafka-1
+    hostname: kafka-1
     ports:
       - "29092:29092"
     environment:
       KAFKA_NODE_ID: 1
-      KAFKA_PROCESS_ROLES: 'broker,controller'
-
-      KAFKA_CONTROLLER_QUORUM_VOTERS: |
-        1@kafka-1:29093,
-        2@kafka-2:29093,
-        3@kafka-3:29093
-
-      KAFKA_LISTENERS: |
-        PLAINTEXT://kafka-1:9092,
-        CONTROLLER://kafka-1:29093,
-        PLAINTEXT_HOST://0.0.0.0:29092
-
-      KAFKA_ADVERTISED_LISTENERS: |
-        PLAINTEXT://kafka-1:9092,
-        PLAINTEXT_HOST://localhost:29092
-
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: |
-        CONTROLLER:PLAINTEXT,
-        PLAINTEXT:PLAINTEXT,
-        PLAINTEXT_HOST:PLAINTEXT
-
-      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
-      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
-
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka-1:29093,2@kafka-2:29093,3@kafka-3:29093"
+      KAFKA_LISTENERS: "PLAINTEXT://kafka-1:9092,CONTROLLER://kafka-1:29093,PLAINTEXT_HOST://0.0.0.0:29092"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka-1:9092,PLAINTEXT_HOST://localhost:29092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
-
-      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
-
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
     volumes:
       - kafka-1-data:/var/lib/kafka/data
 
   kafka-2:
     image: confluentinc/cp-kafka:8.1.3
-    hostname: kafka-2
     container_name: kafka-2
+    hostname: kafka-2
     ports:
       - "29093:29092"
     environment:
       KAFKA_NODE_ID: 2
-      KAFKA_PROCESS_ROLES: 'broker,controller'
-
-      KAFKA_CONTROLLER_QUORUM_VOTERS: |
-        1@kafka-1:29093,
-        2@kafka-2:29093,
-        3@kafka-3:29093
-
-      KAFKA_LISTENERS: |
-        PLAINTEXT://kafka-2:9092,
-        CONTROLLER://kafka-2:29093,
-        PLAINTEXT_HOST://0.0.0.0:29092
-
-      KAFKA_ADVERTISED_LISTENERS: |
-        PLAINTEXT://kafka-2:9092,
-        PLAINTEXT_HOST://localhost:29093
-
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: |
-        CONTROLLER:PLAINTEXT,
-        PLAINTEXT:PLAINTEXT,
-        PLAINTEXT_HOST:PLAINTEXT
-
-      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
-      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
-
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka-1:29093,2@kafka-2:29093,3@kafka-3:29093"
+      KAFKA_LISTENERS: "PLAINTEXT://kafka-2:9092,CONTROLLER://kafka-2:29093,PLAINTEXT_HOST://0.0.0.0:29092"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka-2:9092,PLAINTEXT_HOST://localhost:29093"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
-
-      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
-
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
     volumes:
       - kafka-2-data:/var/lib/kafka/data
 
   kafka-3:
     image: confluentinc/cp-kafka:8.1.3
-    hostname: kafka-3
     container_name: kafka-3
+    hostname: kafka-3
     ports:
       - "29094:29092"
     environment:
       KAFKA_NODE_ID: 3
-      KAFKA_PROCESS_ROLES: 'broker,controller'
-
-      KAFKA_CONTROLLER_QUORUM_VOTERS: |
-        1@kafka-1:29093,
-        2@kafka-2:29093,
-        3@kafka-3:29093
-
-      KAFKA_LISTENERS: |
-        PLAINTEXT://kafka-3:9092,
-        CONTROLLER://kafka-3:29093,
-        PLAINTEXT_HOST://0.0.0.0:29092
-
-      KAFKA_ADVERTISED_LISTENERS: |
-        PLAINTEXT://kafka-3:9092,
-        PLAINTEXT_HOST://localhost:29094
-
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: |
-        CONTROLLER:PLAINTEXT,
-        PLAINTEXT:PLAINTEXT,
-        PLAINTEXT_HOST:PLAINTEXT
-
-      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
-      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
-
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka-1:29093,2@kafka-2:29093,3@kafka-3:29093"
+      KAFKA_LISTENERS: "PLAINTEXT://kafka-3:9092,CONTROLLER://kafka-3:29093,PLAINTEXT_HOST://0.0.0.0:29092"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka-3:9092,PLAINTEXT_HOST://localhost:29094"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
-
-      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
-
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
     volumes:
       - kafka-3-data:/var/lib/kafka/data
-
-volumes:
-  kafka-1-data:
-  kafka-2-data:
-  kafka-3-data:
 
   kafka-ui:
     image: provectuslabs/kafka-ui:v0.7.2
     container_name: kafka-ui
     ports:
-      - "18080:8080"
-
+      - "8989:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: local-cluster
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: |
-        kafka-1:9092,
-        kafka-2:9092,
-        kafka-3:9092
-
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka-1:9092,kafka-2:9092,kafka-3:9092"
     depends_on:
       - kafka-1
       - kafka-2
       - kafka-3
 
-  rabbitmq:
-    container_name: local-rabbitmq
-    image: rabbitmq:4.2-management
+  # ========================
+  # MySQL
+  # ========================
+  mysql:
+    image: mysql:8.4
+    container_name: local-mysql
     ports:
-      - "5672:5672" # AMQP
-      - "15672:15672" # Management Console
-      - "61613:61613" # STOMP
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: localdb
+      MYSQL_USER: localuser
+      MYSQL_PASSWORD: localpass
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=+09:00
     volumes:
-      - ./config/local/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
-      - ./config/local/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
-      - ./volume/local/rabbitmq/data:/var/lib/rabbitmq
+      - mysql-data:/var/lib/mysql
 
+  # ========================
+  # Redis
+  # ========================
   redis:
-    container_name: local-redis
     image: redis/redis-stack:7.4.0-v8
+    container_name: local-redis
     ports:
       - "6379:6379"
       - "8001:8001" # GUI
-    volumes:
-      - ./volume/local/redis/data:/data
     environment:
-      - REDIS_ARGS=--requirepass localpass --maxmemory 512mb --maxmemory-policy noeviction --appendonly no --save 900 1 --save 300 10 --save 60 10000 # I couldn't find the way doing this as conf file.
+      - REDIS_ARGS=--requirepass localpass --maxmemory 512mb --maxmemory-policy noeviction --appendonly no --save ""
+    volumes:
+      - redis-data:/data
+
+# ========================
+# Volumes
+# ========================
+volumes:
+  kafka-1-data:
+  kafka-2-data:
+  kafka-3-data:
+  redis-data:
+  mysql-data:

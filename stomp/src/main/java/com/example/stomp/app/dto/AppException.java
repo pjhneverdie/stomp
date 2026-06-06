@@ -1,4 +1,4 @@
-package com.example.stomp.app.dto.exception;
+package com.example.stomp.app.dto;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

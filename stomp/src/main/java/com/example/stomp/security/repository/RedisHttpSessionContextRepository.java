@@ -7,6 +7,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import org.springframework.boot.autoconfigure.jms.JmsProperties.Listener.Session;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.security.core.Authentication;
@@ -18,7 +19,7 @@ import org.springframework.security.web.context.HttpRequestResponseHolder;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Component;
 
-import com.example.stomp.app.constant.SessionConstant;
+import com.example.stomp.app.constant.SessionKeys;
 import com.example.stomp.app.util.CookieUtil;
 import com.example.stomp.app.util.SecurityUtil;
 import com.example.stomp.member.dto.OidcMemberPrincipal;
@@ -36,82 +37,45 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
 
     private final StringRedisTemplate redis;
 
+    public static final int SESSION_VALID_DAYS = 1;
+
     @Override
     public boolean containsContext(HttpServletRequest request) {
         return CookieUtil.getLoginCookie(request)
                 .map(Cookie::getValue)
-                .map(sessionId -> SessionConstant.SESSION_HKEY_PREFIX + sessionId)
+                .map(sessionId -> SessionKeys.session(sessionId))
                 .map(sessionKey -> Boolean.TRUE.equals(redis.hasKey(sessionKey)))
                 .orElse(false);
     }
 
     public void setWsSessionId(String httpSessionId, String wsSessionId) {
-        redis.opsForHash().put(SessionConstant.SESSION_HKEY_PREFIX + httpSessionId,
-                SessionConstant.SESSION_WS_SESSION_ID_FKEY, wsSessionId);
+        redis.opsForHash().put(SessionKeys.session(httpSessionId),
+                SessionKeys.HFKEY_WS_SESSION_ID, wsSessionId);
     }
 
     public void deleteWsSessionId(String httpSessionId) {
-        redis.opsForHash().delete(SessionConstant.SESSION_HKEY_PREFIX + httpSessionId,
-                SessionConstant.SESSION_WS_SESSION_ID_FKEY);
+        redis.opsForHash().delete(SessionKeys.session(httpSessionId),
+                SessionKeys.HFKEY_WS_SESSION_ID);
     }
 
     public void saveContext(SecurityContext context, HttpServletRequest request, HttpServletResponse response) {
         Optional.ofNullable(context.getAuthentication())
                 .filter(Authentication::isAuthenticated) // Make sure there are no negative specifics on authentication
                                                          // process.
-                .ifPresent(at -> {
+                .ifPresent(authentication -> {
                     String sessionId = CookieUtil.getLoginCookie(request).map(Cookie::getValue)
                             .orElseGet(() -> UUID.randomUUID().toString()); // Create if absent.
 
-                    OidcMemberPrincipal pc = (OidcMemberPrincipal) at.getPrincipal();
+                    OidcMemberPrincipal pc = (OidcMemberPrincipal) authentication.getPrincipal();
 
-                    String luaScript = """
-                            -- KEYS[1] : SESSION_HKEY_PREFIX
-                            -- KEYS[2] : SESSION_REVERSE_INDEX_KEY_PREFIX
-                            -- KEYS[3] : session expiration in seconds
+                    redis.opsForValue().set(SessionKeys.reverseIndex(pc.getId()), sessionId);
 
-                            -- ARGV[1] : newSessionId
-                            -- ARGV[2] : memberId
-                            -- ARGV[3] : authorities
-
-                            -- 1. Delete previous session to comply with one session policy.
-                            local sessionReverseIndexKey = KEYS[2] .. ARGV[2]
-                            local oldSessionId = redis.call('GET', sessionReverseIndexKey)
-
-                            -- If old session exists, we need to retrieve the wsSessionId before deleting it
-                            local wsSessionId = nil
-                            if oldSessionId then
-                                local oldSessionKey = KEYS[1] .. oldSessionId
-                                wsSessionId = redis.call('HGET', oldSessionKey, 'wsSessionId')
-                                redis.call('DEL', oldSessionKey)
-                            end
-
-                            -- 2. Make the new session.
-                            local newSessionKey = KEYS[1] .. ARGV[1]
-                            redis.call('HMSET', newSessionKey,
-                                'memberId', ARGV[2],
-                                'authorities', ARGV[3],
-                                'httpSessionId', ARGV[1],
-                                'wsSessionId', wsSessionId
-                            )
-
-                            -- 3. Update the index and expiry.
-                            redis.call('EXPIRE', newSessionKey, KEYS[3])
-                            redis.call('SET', sessionReverseIndexKey, ARGV[1])
-                            redis.call('EXPIRE', sessionReverseIndexKey, KEYS[3])
-
-                            return;
-                                                        """;
-
-                    redis.execute(
-                            new DefaultRedisScript<>(luaScript),
-                            Arrays.asList(
-                                    SessionConstant.SESSION_HKEY_PREFIX,
-                                    SessionConstant.SESSION_REVERSE_INDEX_KEY_PREFIX,
-                                    String.valueOf(TimeUnit.DAYS.toSeconds(SessionConstant.SESSION_VALID_DAYS))),
-                            sessionId,
-                            pc.getId(),
-                            pc.getAuthorities());
+                    redis.opsForHash().putAll(
+                            SessionKeys.session(sessionId),
+                            Map.of(
+                                    SessionKeys.HFKEY_MEMBER_ID, pc.getId(),
+                                    SessionKeys.HFKEY_AUTHORITIES, pc.getAuthorities(),
+                                    SessionKeys.HFKEY_HTTP_SESSION_ID, sessionId));
 
                     // 이벤트 발생
 
@@ -148,7 +112,7 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
     }
 
     private Optional<SecurityContext> readSecurityContextFromRedis(String sessionId) {
-        Map<Object, Object> hashFileds = redis.opsForHash().entries(SessionConstant.SESSION_HKEY_PREFIX + sessionId);
+        Map<Object, Object> hashFileds = redis.opsForHash().entries(SessionKeys.session(sessionId));
 
         if (hashFileds.isEmpty())
             return Optional.empty();
@@ -164,8 +128,8 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
     }
 
     private void extendSessionExpiry(String sessionId, String memberId) {
-        redis.expire(SessionConstant.SESSION_HKEY_PREFIX + sessionId, 1, TimeUnit.DAYS);
-        redis.expire(SessionConstant.SESSION_REVERSE_INDEX_KEY_PREFIX + memberId, 1, TimeUnit.DAYS);
+        redis.expire(SessionKeys.session(sessionId), SESSION_VALID_DAYS, TimeUnit.DAYS);
+        redis.expire(SessionKeys.reverseIndex(memberId), SESSION_VALID_DAYS, TimeUnit.DAYS);
     }
 
     // We are using over Security 6.0.

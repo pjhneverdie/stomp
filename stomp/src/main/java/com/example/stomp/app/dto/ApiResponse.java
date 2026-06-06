@@ -4,8 +4,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
 
-import com.example.stomp.app.dto.exception.AppException;
-
 public interface ApiResponse<T> {
 
     T value();

@@ -14,8 +14,8 @@ import org.springframework.security.web.authentication.AuthenticationFailureHand
 import org.springframework.stereotype.Component;
 
 import com.example.stomp.app.dto.ApiResponse;
-import com.example.stomp.app.dto.exception.AppException;
-import com.example.stomp.app.dto.exception.ExceptionInfo;
+import com.example.stomp.app.dto.AppException;
+import com.example.stomp.app.dto.ExceptionInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;

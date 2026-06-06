@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS member (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    email VARCHAR UNIQUE NOT NULL,
-    picture VARCHAR NOT NULL,
-    role VARCHAR NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    picture VARCHAR(255) NOT NULL,
+    role VARCHAR(255) NOT NULL,
     credential_id INT NOT NULL UNIQUE,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,

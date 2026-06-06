@@ -8,7 +8,6 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 
 import com.example.stomp.app.util.StompHeaderUtil;
-import com.example.stomp.chat.dto.ChatRoomJoinReq;
 import com.example.stomp.chat.service.ChatRoomService;
 import com.example.stomp.member.service.MemberService;
 
@@ -24,10 +23,10 @@ public class ChatSubscriptionInterceptor implements ChannelInterceptor {
 
     private final MemberService memberService;
 
+
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-
         // This is just a heartbeat.
         if (accessor.getCommand() == null) {
             return message;
@@ -36,20 +35,12 @@ public class ChatSubscriptionInterceptor implements ChannelInterceptor {
         switch (accessor.getCommand()) {
             case SEND: {
                 // 메시지 roomUuid 없으면 거절 등 validation.
-
             }
                 break;
-            /**
-             * This is for the first time subscription of the chatroom.
-             */
-            case RECEIPT: {
-                String nickname = (String) accessor.getHeader("nickname");
-                String roomUUID = (String) accessor.getHeader("roomUUID");
 
-                chatRoomService.join(
-                        new ChatRoomJoinReq(roomUUID,
-                                memberService.getMemberById(StompHeaderUtil.getPrincipal(accessor).getId()),
-                                nickname));
+            case RECEIPT: {
+                // String nickname = (String) accessor.getHeader("nickname");
+                // String roomUUID = (String) accessor.getHeader("roomUUID");
             }
                 break;
 

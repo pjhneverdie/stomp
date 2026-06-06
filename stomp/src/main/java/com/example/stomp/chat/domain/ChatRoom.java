@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.example.stomp.app.domain.BaseEntity;
-import com.example.stomp.app.dto.exception.AppException;
+import com.example.stomp.app.dto.AppException;
 import com.example.stomp.chat.dto.ChatExceptions;
 import com.example.stomp.member.domain.Member;
 

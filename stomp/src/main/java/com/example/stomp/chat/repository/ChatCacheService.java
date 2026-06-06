@@ -1,29 +1,22 @@
-package com.example.stomp.chat.service;
+package com.example.stomp.chat.repository;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.hibernate.mapping.Set;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.example.stomp.app.constant.RedisKeys;
-import com.example.stomp.chat.dto.ChatCacheReq.ChatRoomMemberCacheReq;
 import com.example.stomp.chat.dto.ChatMessageSendReq;
 import com.example.stomp.chat.dto.ChatMessageSendReq.ChatMsgInfo;
 import com.example.stomp.chat.dto.ChatMessageSendReq.RecipientInfo;
 
-import jakarta.security.auth.message.MessageInfo;
-
 import com.example.stomp.chat.dto.SimpleChatMessage;
-import com.example.stomp.chat.repository.ChatLua;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -39,17 +32,23 @@ public class ChatCacheService {
 
         private static final long TTL_SECONDS = 7 * 24 * 60 * 60;
 
-        public void cacheChatRoomMember(ChatRoomMemberCacheReq req) {
+        public void cacheJoinedMemberInfo(String memberId, String roomUuid, String chatRoomMemberId,
+                        String nickname) {
+                // type: set
+                // key: chat_room:{roomUuid}:members
+                // member: {chatRoomMemberId}
                 redisTemplate.opsForSet()
                                 .add(RedisKeys.roomMembers(
-                                                req.roomUuid()),
-                                                req.chatRoomMemberId());
-
+                                                roomUuid),
+                                                chatRoomMemberId);
+                // type: hash
+                // key: chat_room:{roomUuid}:member:{chatRoomMemberId}
+                // field: {memberId}, {nickname}
                 redisTemplate.opsForHash().putAll(
-                                RedisKeys.roomMember(req.roomUuid(), req.chatRoomMemberId()),
+                                RedisKeys.roomMember(roomUuid, chatRoomMemberId),
                                 Map.of(
-                                                RedisKeys.ROOM_MEMBER_HFKEY_MEMBER_ID, req.memberId(),
-                                                RedisKeys.ROOM_MEMBER_HFKEY_NICKNAME, req.nickname()));
+                                                RedisKeys.ROOM_MEMBER_HFKEY_MEMBER_ID, memberId,
+                                                RedisKeys.ROOM_MEMBER_HFKEY_NICKNAME, nickname));
         }
 
         public Optional<RecipientInfo> findRecipientInfo(ChatMessageSendReq req) {
@@ -105,7 +104,7 @@ public class ChatCacheService {
 
                                                 operations.execute(
                                                                 chatLua.updatePersonelViewAndRecentMessage(),
-                                                                (List<K>) keys, 
+                                                                (List<K>) keys,
                                                                 String.valueOf(chatMsgInfo.createdAt()),
                                                                 roomUuid,
                                                                 chatMsgInfo.content(),

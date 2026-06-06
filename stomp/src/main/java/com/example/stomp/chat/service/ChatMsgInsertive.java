@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class ChatMessageInsertive {
+public class ChatMsgInsertive {
 
     private final ObjectMapper objectMapper;
     private final StringRedisTemplate redisTemplate;

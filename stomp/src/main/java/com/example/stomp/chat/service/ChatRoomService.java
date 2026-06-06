@@ -2,11 +2,10 @@ package com.example.stomp.chat.service;
 
 import org.springframework.stereotype.Service;
 
-import com.example.stomp.app.dto.exception.AppException;
+import com.example.stomp.app.dto.AppException;
 import com.example.stomp.chat.domain.ChatRoom;
 import com.example.stomp.chat.domain.ChatTrialStage;
 import com.example.stomp.chat.dto.ChatExceptions;
-import com.example.stomp.chat.dto.ChatRoomJoinReq;
 import com.example.stomp.chat.repository.ChatRoomRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -26,13 +25,9 @@ public class ChatRoomService {
         return chatRoomRepository.save(ChatRoom.create(issueTitle)).getUuid();
     }
 
-    public ChatRoom join(ChatRoomJoinReq req) {
-        ChatRoom chatRoom = chatRoomRepository.findByUuidWithMembers(req.chatRoomUuid())
+    public ChatRoom findByUuidWithMembers(String roomUuid) {
+        return chatRoomRepository.findByUuidWithMembers(roomUuid)
                 .orElseThrow(() -> new AppException(ChatExceptions.UNEXISTS_CHAT));
-
-        chatRoom.join(req.member(), req.nickname());
-
-        return chatRoom;
     }
 
 }

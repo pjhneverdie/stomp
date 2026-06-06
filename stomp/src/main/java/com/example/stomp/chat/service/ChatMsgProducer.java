@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import com.example.stomp.chat.domain.ChatMessage;
 import com.example.stomp.chat.dto.ChatMessageSendReq;
 import com.example.stomp.chat.dto.ChatMessageSendReq.RecipientInfo;
+import com.example.stomp.chat.repository.ChatCacheService;
 
 import lombok.RequiredArgsConstructor;
 
