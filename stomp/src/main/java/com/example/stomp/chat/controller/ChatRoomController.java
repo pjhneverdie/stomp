@@ -25,7 +25,8 @@ public class ChatRoomController {
     public ApiResponse<String> create(
             @RequestBody ChatRoomForm.Create form,
             @AuthenticationPrincipal RedisHttpSessionMemberPrincipal pc) {
-        return ApiResponse.createDefaultSuccessResponse(chatRoomFacade.create(pc.getLongId(), form.issueTitle()));
+        return ApiResponse.createDefaultSuccessResponse(
+                chatRoomFacade.create(pc.getLongId(), form.issueTitle(), form.nickname()));
     }
 
     @PostMapping("/join")

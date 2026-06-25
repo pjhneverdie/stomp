@@ -1,13 +1,14 @@
 package com.example.stomp.app.util;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Optional;
 
 import org.springframework.boot.web.server.Cookie.SameSite;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 
-import com.example.stomp.app.constant.SessionConstant;
+import com.example.stomp.app.constant.SessionKeys;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,22 +20,20 @@ public final class CookieUtil {
     }
 
     public static Optional<Cookie> getLoginCookie(HttpServletRequest request) {
-        for (Cookie cookie : Optional.ofNullable(request.getCookies()).orElse(new Cookie[] {})) {
-            if (SessionConstant.COOKIE_NAME.equals(cookie.getName())) {
-                return Optional.of(cookie);
-            }
-        }
-
-        return Optional.empty();
+        return Optional.ofNullable(request.getCookies())
+                .stream()
+                .flatMap(Arrays::stream)
+                .filter(cookie -> SessionKeys.COOKIE_NAME.equals(cookie.getName()))
+                .findFirst();
     }
 
     public static void setLoginCookie(String sessionId, HttpServletResponse response) {
-        ResponseCookie cookie = ResponseCookie.from(SessionConstant.COOKIE_NAME, sessionId)
+        ResponseCookie cookie = ResponseCookie.from(SessionKeys.COOKIE_NAME, sessionId)
                 .secure(true)
                 .httpOnly(true)
                 .maxAge(Duration.ofDays(1))
                 .sameSite(SameSite.LAX.toString())
-                .path(SessionConstant.COOKIE_PATH)
+                .path(SessionKeys.COOKIE_PATH)
                 .domain("app.github.dev")
                 .build();
 

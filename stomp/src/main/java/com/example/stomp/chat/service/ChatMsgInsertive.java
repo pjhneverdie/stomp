@@ -19,30 +19,30 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ChatMsgInsertive {
 
-    private final ObjectMapper objectMapper;
-    private final StringRedisTemplate redisTemplate;
-    private final ChatMessageBulkInsertRepository bulkInsertRepository;
+    // private final ObjectMapper objectMapper;
+    // private final StringRedisTemplate redisTemplate;
+    // private final ChatMessageBulkInsertRepository bulkInsertRepository;
 
-    @Scheduled(fixedDelay = 5000)
-    public void insertBulk() {
-        List<String> stringDtos = redisTemplate.opsForList().range(
-                RedisKeys.chatMessageOutbox(),
-                0,
-                99);
+    // @Scheduled(fixedDelay = 5000)
+    // public void insertBulk() {
+    //     List<String> stringDtos = redisTemplate.opsForList().range(
+    //             RedisKeys.chatMessageOutbox(),
+    //             0,
+    //             99);
 
-        if (stringDtos.isEmpty()) {
-            return;
-        }
+    //     if (stringDtos.isEmpty()) {
+    //         return;
+    //     }
 
-        bulkInsertRepository.bulkInsert(stringDtos.stream().map(json -> {
-            try {
-                return objectMapper.readValue(
-                        json,
-                        ChatMessageNativeInsertDto.class);
-            } catch (JsonProcessingException e) {
-                return null;
-            }
-        }).filter(Objects::nonNull).toList());
+    //     bulkInsertRepository.bulkInsert(stringDtos.stream().map(json -> {
+    //         try {
+    //             return objectMapper.readValue(
+    //                     json,
+    //                     ChatMessageNativeInsertDto.class);
+    //         } catch (JsonProcessingException e) {
+    //             return null;
+    //         }
+    //     }).filter(Objects::nonNull).toList());
 
-    }
+    // }
 }

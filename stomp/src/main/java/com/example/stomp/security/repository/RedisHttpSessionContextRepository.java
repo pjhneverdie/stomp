@@ -1,15 +1,15 @@
 package com.example.stomp.security.repository;
 
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import org.springframework.boot.autoconfigure.jms.JmsProperties.Listener.Session;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.DeferredSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
@@ -68,19 +68,46 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
 
                     OidcMemberPrincipal pc = (OidcMemberPrincipal) authentication.getPrincipal();
 
-                    redis.opsForValue().set(SessionKeys.reverseIndex(pc.getId()), sessionId);
+                    validateMultiSession(pc); // Reject if they are trying more than one device.
 
-                    redis.opsForHash().putAll(
-                            SessionKeys.session(sessionId),
-                            Map.of(
-                                    SessionKeys.HFKEY_MEMBER_ID, pc.getId(),
-                                    SessionKeys.HFKEY_AUTHORITIES, pc.getAuthorities(),
-                                    SessionKeys.HFKEY_HTTP_SESSION_ID, sessionId));
+                    redis.executePipelined((RedisCallback<Object>) connection -> {
+                        byte[] reverseKey = redis.getStringSerializer()
+                                .serialize(SessionKeys.reverseIndex(pc.getId()));
 
-                    // 이벤트 발생
+                        byte[] sessionKey = redis.getStringSerializer()
+                                .serialize(SessionKeys.session(sessionId));
+
+                        connection.stringCommands().set(
+                                reverseKey,
+                                redis.getStringSerializer().serialize(sessionId));
+
+                        Map<byte[], byte[]> hash = new HashMap<>();
+                        hash.put(
+                                redis.getStringSerializer().serialize(SessionKeys.HFKEY_MEMBER_ID),
+                                redis.getStringSerializer().serialize(pc.getId()));
+                        hash.put(
+                                redis.getStringSerializer().serialize(SessionKeys.HFKEY_AUTHORITIES),
+                                redis.getStringSerializer()
+                                        .serialize(SecurityUtil.authoritiesToString(pc.getAuthorities())));
+                        hash.put(
+                                redis.getStringSerializer().serialize(SessionKeys.HFKEY_HTTP_SESSION_ID),
+                                redis.getStringSerializer().serialize(sessionId));
+
+                        connection.hashCommands().hMSet(sessionKey, hash);
+
+                        return null;
+                    });
 
                     CookieUtil.setLoginCookie(sessionId, response);
                 });
+    }
+
+    private void validateMultiSession(OidcMemberPrincipal pc) {
+        String oldId = redis.opsForValue().get(SessionKeys.reverseIndex(pc.getId()));
+
+        if (oldId != null) {
+            throw new AuthenticationServiceException("Please decline exisiting session.");
+        }
     }
 
     @Override
@@ -88,25 +115,28 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
         return new RedisHttpSessionSecurityDefferedContext(
                 () -> {
                     Optional<Cookie> cookieOpt = CookieUtil.getLoginCookie(request);
-
                     if (cookieOpt.isEmpty()) {
                         return null;
                     }
 
                     String sessionId = cookieOpt.get().getValue();
-
                     Optional<SecurityContext> scOpt = readSecurityContextFromRedis(sessionId);
-
                     if (scOpt.isEmpty()) {
                         return null;
                     }
 
-                    SecurityContext sc = scOpt.get();
+                    redis.executePipelined((RedisCallback<Object>) connection -> {
+                        byte[] reverseKey = redis.getStringSerializer()
+                                .serialize(SessionKeys.reverseIndex(scOpt.get().getAuthentication().getName()));
+                        byte[] sessionKey = redis.getStringSerializer().serialize(SessionKeys.session(sessionId));
 
-                    // Don't forget to extend session expiry.
-                    extendSessionExpiry(sessionId, sc.getAuthentication().getName());
+                        connection.keyCommands().expire(sessionKey, TimeUnit.DAYS.toSeconds(SESSION_VALID_DAYS));
+                        connection.keyCommands().expire(reverseKey, TimeUnit.DAYS.toSeconds(SESSION_VALID_DAYS));
 
-                    return sc;
+                        return null;
+                    });
+
+                    return scOpt.get();
                 },
                 SecurityContextHolder.getContextHolderStrategy());
     }
@@ -125,11 +155,6 @@ public class RedisHttpSessionContextRepository implements SecurityContextReposit
         sc.setAuthentication(at);
 
         return Optional.of(sc);
-    }
-
-    private void extendSessionExpiry(String sessionId, String memberId) {
-        redis.expire(SessionKeys.session(sessionId), SESSION_VALID_DAYS, TimeUnit.DAYS);
-        redis.expire(SessionKeys.reverseIndex(memberId), SESSION_VALID_DAYS, TimeUnit.DAYS);
     }
 
     // We are using over Security 6.0.

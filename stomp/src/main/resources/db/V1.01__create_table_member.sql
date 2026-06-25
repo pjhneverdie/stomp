@@ -6,5 +6,5 @@ CREATE TABLE IF NOT EXISTS member (
     credential_id INT NOT NULL UNIQUE,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
-    CONSTRAINT fk_credential FOREIGN KEY (credential) REFERENCES credential (id) ON DELETE CASCADE
+    CONSTRAINT fk_credential FOREIGN KEY (credential_id) REFERENCES credential (id) ON DELETE CASCADE
 );

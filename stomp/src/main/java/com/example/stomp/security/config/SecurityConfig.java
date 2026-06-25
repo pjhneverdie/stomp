@@ -9,7 +9,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.CookieClearingLogoutHandler;
 
-import com.example.stomp.app.constant.SessionConstant;
+import com.example.stomp.app.constant.SessionKeys;
 import com.example.stomp.member.service.MemberService;
 import com.example.stomp.security.handler.OicdLoginSuccessHandler;
 import com.example.stomp.security.handler.RedisHttpSessionLogoutHandler;
@@ -68,7 +68,7 @@ public class SecurityConfig {
                 http.logout(logout -> logout
                                 .logoutUrl(LOGOUT_PATH)
                                 .addLogoutHandler(redisHttpSessionLogoutHandler)
-                                .addLogoutHandler(new CookieClearingLogoutHandler(SessionConstant.COOKIE_NAME))
+                                .addLogoutHandler(new CookieClearingLogoutHandler(SessionKeys.COOKIE_NAME))
                                 .logoutSuccessHandler(sessionLogoutSuccessHandler));
 
                 return http.build();

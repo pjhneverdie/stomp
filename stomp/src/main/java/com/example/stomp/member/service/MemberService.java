@@ -38,7 +38,7 @@ public class MemberService extends OidcUserService {
                                                         String.valueOf(member.getId()));
                                 })
                                 .orElseGet(() -> {
-                                        Member member = memberRepository.save(Member.createMember(oidcUser.getEmail(),
+                                        Member member = memberRepository.save(Member.create(oidcUser.getEmail(),
                                                         oidcUser.getPicture()));
 
                                         return new OidcMemberPrincipal(

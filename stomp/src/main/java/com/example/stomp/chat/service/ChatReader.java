@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ChatReader {
 
-    private final StringRedisTemplate redisTemplate;
+    // private final StringRedisTemplate redisTemplate;
 
     // /**
     //   * @formatter:off

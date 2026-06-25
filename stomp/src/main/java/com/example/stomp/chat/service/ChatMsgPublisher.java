@@ -13,15 +13,15 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ChatMsgPublisher {
 
-    private final SimpMessageSendingOperations messagingTemplate;
+    // private final SimpMessageSendingOperations messagingTemplate;
 
-    public void pubFailure(SenderInfo senderInfo) {
-        messagingTemplate.convertAndSendToUser(String.valueOf(senderInfo.memberId()), "/queue/messages", "");
+    // public void pubFailure(SenderInfo senderInfo) {
+    //     messagingTemplate.convertAndSendToUser(String.valueOf(senderInfo.memberId()), "/queue/messages", "");
 
-    }
+    // }
 
-    public void pubSuccess() {
+    // public void pubSuccess() {
 
-    }
+    // }
 
 }

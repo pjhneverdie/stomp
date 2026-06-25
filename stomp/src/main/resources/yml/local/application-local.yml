@@ -6,7 +6,7 @@ spring:
       - optional:classpath:/yml/local/application-local-mysql.yml
       - optional:classpath:/yml/local/application-local-login.yml
       - optional:classpath:/yml/local/application-local-redis.yml
-      - optional:classpath:/yml/local/application-local-rabbitmq.yml
+      - optional:classpath:/yml/local/application-local-kafka.yml
 
   docker:
     compose:

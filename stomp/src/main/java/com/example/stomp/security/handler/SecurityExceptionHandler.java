@@ -3,6 +3,8 @@ package com.example.stomp.security.handler;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
@@ -20,43 +22,49 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 
 @Component
-@RequiredArgsConstructor
 public class SecurityExceptionHandler
         implements AuthenticationEntryPoint, AuthenticationFailureHandler, AccessDeniedHandler {
 
+    private final String LOGIN_FAILED_REDIRECT_URL;
     private final ObjectMapper objectMapper;
 
-    // handle Exception caused by AuthenticationEntryPoint
-    @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response,
-            AuthenticationException authException) throws IOException {
-        logBriefError("AuthenticationEntryPoint", authException);
-        convertToAppException(response, authException, HttpStatus.UNAUTHORIZED);
-
+    public SecurityExceptionHandler(
+            @Value("${login-failed-redirect-url}") String loginFailedRedirectUrl,
+            @Autowired ObjectMapper objectMapper) {
+        this.LOGIN_FAILED_REDIRECT_URL = loginFailedRedirectUrl;
+        this.objectMapper = objectMapper;
     }
 
-    // handle Exception caused by AuthenticationFailureHandler
+    // From AuthenticationFailureHandler.
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
             AuthenticationException exception) throws IOException {
-        logBriefError("AuthenticationFailureHandler", exception);
-        convertToAppException(response, exception, HttpStatus.UNAUTHORIZED);
+        response.sendRedirect(
+                LOGIN_FAILED_REDIRECT_URL + String.format("?message=%s", exception.getMessage()));
     }
 
-    // handle Exception caused by AccessDeniedHandler
+    // From AuthenticationEntryPoint.
+    @Override
+    public void commence(HttpServletRequest request, HttpServletResponse response,
+            AuthenticationException authException) throws IOException {
+        sendFailureResponse(
+                response,
+                convertToAppException(response, authException, HttpStatus.UNAUTHORIZED));
+    }
+
+    // From AccessDeniedHandler.
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response,
             AccessDeniedException accessDeniedException) throws IOException {
-        logBriefError("AccessDeniedHandler", accessDeniedException);
-        convertToAppException(response, accessDeniedException, HttpStatus.FORBIDDEN);
+        sendFailureResponse(
+                response,
+                convertToAppException(response, accessDeniedException, HttpStatus.FORBIDDEN));
     }
 
-    private void convertToAppException(HttpServletResponse response, Exception e, HttpStatus status)
-            throws IOException {
-        AppException appException = new AppException(new ExceptionInfo() {
+    private AppException convertToAppException(HttpServletResponse response, Exception exception, HttpStatus status) {
+        return new AppException(new ExceptionInfo() {
             @Override
             public HttpStatus getHttpStatus() {
                 return status;
@@ -64,11 +72,9 @@ public class SecurityExceptionHandler
 
             @Override
             public String getMessage() {
-                return e.getMessage();
+                return exception.getMessage();
             }
         });
-
-        sendFailureResponse(response, appException);
     }
 
     private void sendFailureResponse(HttpServletResponse response, AppException e) throws IOException {
@@ -78,23 +84,6 @@ public class SecurityExceptionHandler
 
         response.getWriter().write(
                 objectMapper.writeValueAsString(ApiResponse.createDefaultFailureResponse(e)));
-    }
-
-    private void logBriefError(String handlerName, Exception e) {
-        Throwable rootCause = e;
-
-        while (rootCause.getCause() != null) {
-            rootCause = rootCause.getCause();
-        }
-
-        StackTraceElement firstLine = rootCause.getStackTrace()[0];
-
-        System.out.printf("[%s] 근본 원인: %s - %s (발생위치: %s:%d)%n",
-                handlerName,
-                rootCause.getClass().getSimpleName(),
-                rootCause.getMessage(),
-                firstLine.getFileName(),
-                firstLine.getLineNumber());
     }
 
 }

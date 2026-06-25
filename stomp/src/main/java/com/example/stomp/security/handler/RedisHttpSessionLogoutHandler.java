@@ -1,11 +1,13 @@
 package com.example.stomp.security.handler;
 
+import java.util.List;
+
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Component;
 
-import com.example.stomp.app.constant.SessionConstant;
+import com.example.stomp.app.constant.SessionKeys;
 import com.example.stomp.app.util.CookieUtil;
 import com.example.stomp.security.dto.RedisHttpSessionMemberPrincipal;
 
@@ -27,9 +29,9 @@ public class RedisHttpSessionLogoutHandler implements LogoutHandler {
                     String memberId = ((RedisHttpSessionMemberPrincipal) authentication
                             .getPrincipal()).getId();
 
-                    redis.delete(SessionConstant.SESSION_HKEY_PREFIX + sessionId);
-                    redis.delete(SessionConstant.SESSION_REVERSE_INDEX_KEY_PREFIX
-                            + memberId);
+                    redis.delete(List.of(
+                            SessionKeys.session(sessionId),
+                            SessionKeys.reverseIndex(memberId)));
                 });
     }
 

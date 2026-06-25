@@ -9,7 +9,7 @@ public abstract class ChatRoomForm {
     private ChatRoomForm() {
     }
 
-    public record Create(@NotBlank String issueTitle) {
+    public record Create(@NotBlank String issueTitle, @NotBlank @Size(min = 2, max = 16) String nickname) {
     }
 
     public record Join(@NotNull Long memberId, @NotBlank String roomUuid,

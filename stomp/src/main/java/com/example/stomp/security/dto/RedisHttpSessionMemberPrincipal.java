@@ -6,7 +6,7 @@ import java.util.function.Function;
 
 import org.springframework.security.core.GrantedAuthority;
 
-import com.example.stomp.app.constant.SessionConstant;
+import com.example.stomp.app.constant.SessionKeys;
 import com.example.stomp.app.util.SecurityUtil;
 
 import lombok.AccessLevel;
@@ -31,10 +31,10 @@ public class RedisHttpSessionMemberPrincipal {
         Function<String, String> getStr = key -> (String) sessionMap.get(key);
 
         return new RedisHttpSessionMemberPrincipal(
-                getStr.apply(SessionConstant.SESSION_MEMBER_ID_FKEY),
-                SecurityUtil.stringToAuthorities(getStr.apply(SessionConstant.SESSION_AUHTORITIES_FKEY)),
-                getStr.apply(SessionConstant.SESSION_HTTP_SESSION_ID_FKEY),
-                getStr.apply(SessionConstant.SESSION_WS_SESSION_ID_FKEY));
+                getStr.apply(SessionKeys.HFKEY_MEMBER_ID),
+                SecurityUtil.stringToAuthorities(getStr.apply(SessionKeys.HFKEY_AUTHORITIES)),
+                getStr.apply(SessionKeys.HFKEY_HTTP_SESSION_ID),
+                getStr.apply(SessionKeys.HFKEY_WS_SESSION_ID));
     }
 
     public Long getLongId() {

@@ -20,9 +20,9 @@ public class MemberController {
 
     private final MemberFacade memberFacade;
 
-    // @GetMapping("/me")
-    // public ApiResponse<Me> me(@AuthenticationPrincipal RedisHttpSessionMemberPrincipal principal) {
-    //     return ApiResponse.createDefaultSuccessResponse(memberFacade.getMe(principal.getLongId()));
-    // }
+    @GetMapping("/me")
+    public ApiResponse<Me> me(@AuthenticationPrincipal RedisHttpSessionMemberPrincipal principal) {
+        return ApiResponse.createDefaultSuccessResponse(memberFacade.getMe(principal.getLongId()));
+    }
 
 }

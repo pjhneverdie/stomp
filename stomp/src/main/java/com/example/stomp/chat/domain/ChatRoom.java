@@ -40,12 +40,17 @@ public class ChatRoom extends BaseEntity {
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ChatRoomMember> members;
 
-    @Column(nullable = false)
-    private LocalDateTime lastActivedAt;
+    public static ChatRoom create(Member member, String issueTitle, String nickname) {
+        ChatRoom cr = new ChatRoom(
+                UUID.randomUUID().toString(),
+                issueTitle,
+                ChatTrialStage.STAND_BY,
+                new ArrayList<>());
 
-    public static ChatRoom create(String issueTitle) {
-        return new ChatRoom(UUID.randomUUID().toString(), issueTitle, ChatTrialStage.STAND_BY, new ArrayList<>(),
-                LocalDateTime.of(1970, 1, 1, 0, 0));
+        ChatRoomMember cm = ChatRoomMember.create(cr, member, nickname);
+        cr.members.add(cm);
+
+        return cr;
     }
 
     public void join(Member member, String nickname) {

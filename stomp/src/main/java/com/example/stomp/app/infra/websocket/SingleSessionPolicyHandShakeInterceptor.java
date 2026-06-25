@@ -1,4 +1,4 @@
-package com.example.stomp.app.infra.websocket.handshake;
+package com.example.stomp.app.infra.websocket;
 
 import java.util.Map;
 
@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-public class MtipleWsSessionValidationHSInterceptor implements HandshakeInterceptor {
+public class SingleSessionPolicyHandShakeInterceptor implements HandshakeInterceptor {
 
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler,
@@ -26,12 +26,11 @@ public class MtipleWsSessionValidationHSInterceptor implements HandshakeIntercep
          * 2. based on RedisHttpSessionMemberPrincipal will created by redis session, 
          * 'getWsSessionId()' will return null. 
          * 
-         * And we are doing handshake only if the 'wsSessionId' is null. 
+         * And we are doing handshake only if the wsSessionId is null. 
          * 
          * @formatter:on
          */
-        return SecurityUtil.getPrincipal().getWsSessionId() == null; // It says they will be declined except for the
-                                                                     // connection for the first time or reconnection.
+        return SecurityUtil.getPrincipal().getWsSessionId() == null;
     }
 
     @Override

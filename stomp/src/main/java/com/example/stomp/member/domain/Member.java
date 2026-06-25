@@ -40,7 +40,7 @@ public class Member extends BaseEntity {
     @JoinColumn(name = "credential_id", nullable = false, unique = true)
     private Credential credential;
 
-    public static Member createMember(String email, String picture) {
+    public static Member create(String email, String picture) {
         return new Member(email, picture, MemberRole.FREE, Credential.create());
     }
 

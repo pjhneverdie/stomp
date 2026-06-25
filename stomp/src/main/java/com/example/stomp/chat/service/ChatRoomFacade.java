@@ -15,8 +15,8 @@ public class ChatRoomFacade {
     private final ChatRoomService chatRoomService;
     private final ChatCacheService chatCacheService;
 
-    public String create(Long memberId, String issueTitle) {
-        return chatRoomService.create(memberId, issueTitle);
+    public String create(Long memberId, String issueTitle, String nickname) {
+        return chatRoomService.create(memberService.findById(memberId), issueTitle, nickname);
     }
 
     public String join(Long memberId, String roomUuid, String nickname) {

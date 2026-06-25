@@ -17,7 +17,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RedisHttpSessionAuthorizationRequestRepository
         implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
+
     private final RedisTemplate<String, OAuth2AuthorizationRequest> reids;
+
+    private final static Long LOGIN_TIMEOUT_SEC = 60L;
 
     @Override
     public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
@@ -28,18 +31,16 @@ public class RedisHttpSessionAuthorizationRequestRepository
     public void saveAuthorizationRequest(OAuth2AuthorizationRequest authorizationRequest, HttpServletRequest request,
             HttpServletResponse response) {
         reids.opsForValue().set(authorizationRequest.getState(), authorizationRequest,
-                Duration.ofSeconds(60));
+                Duration.ofSeconds(LOGIN_TIMEOUT_SEC));
     }
 
     @Override
     public OAuth2AuthorizationRequest removeAuthorizationRequest(HttpServletRequest request,
             HttpServletResponse response) {
-        String state = request.getParameter(OAuth2ParameterNames.STATE);
+        OAuth2AuthorizationRequest authRequest = loadAuthorizationRequest(request);
 
-        OAuth2AuthorizationRequest authRequest = reids.opsForValue().get(state);
-
-        if (state != null) {
-            reids.delete(state);
+        if (authRequest != null) {
+            reids.delete(authRequest.getState());
         }
 
         return authRequest;
