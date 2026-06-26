@@ -7,10 +7,10 @@ import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import com.example.stomp.chat.domain.ChatMessage;
-import com.example.stomp.chat.dto.ChatMessageSendReq;
-import com.example.stomp.chat.dto.ChatMessageSendReq.RecipientInfo;
-import com.example.stomp.chat.repository.ChatCacheService;
+import com.example.stomp.chat.domain.message.ChatMessage;
+import com.example.stomp.chat.infrastructure.ChatCacheService;
+import com.example.stomp.trial.dto.ChatMessageSendReq;
+import com.example.stomp.trial.dto.ChatMessageSendReq.RecipientInfo;
 
 import lombok.RequiredArgsConstructor;
 

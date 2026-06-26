@@ -7,9 +7,9 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import com.example.stomp.app.constant.RedisKeys;
-import com.example.stomp.chat.dto.ChatMessageNativeInsertDto;
-import com.example.stomp.chat.repository.ChatMessageBulkInsertRepository;
+import com.example.stomp.application.constant.RedisKeys;
+import com.example.stomp.chat.infrastructure.ChatMessageBulkInsertRepository;
+import com.example.stomp.trial.dto.ChatMessageNativeInsertDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

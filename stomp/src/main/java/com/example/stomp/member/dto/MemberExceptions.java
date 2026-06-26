@@ -2,7 +2,7 @@ package com.example.stomp.member.dto;
 
 import org.springframework.http.HttpStatus;
 
-import com.example.stomp.app.dto.ExceptionInfo;
+import com.example.stomp.application.dto.ExceptionInfo;
 
 import lombok.RequiredArgsConstructor;
 

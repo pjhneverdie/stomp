@@ -7,8 +7,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Component;
 
-import com.example.stomp.app.constant.SessionKeys;
-import com.example.stomp.app.util.CookieUtil;
+import com.example.stomp.application.constant.SessionKeys;
+import com.example.stomp.application.util.CookieUtil;
 import com.example.stomp.security.dto.RedisHttpSessionMemberPrincipal;
 
 import jakarta.servlet.http.Cookie;

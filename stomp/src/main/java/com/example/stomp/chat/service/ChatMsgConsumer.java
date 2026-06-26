@@ -9,8 +9,8 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 
-import com.example.stomp.chat.dto.ChatMessageSendReq;
-import com.example.stomp.chat.repository.ChatCacheService;
+import com.example.stomp.chat.infrastructure.ChatCacheService;
+import com.example.stomp.trial.dto.ChatMessageSendReq;
 
 import lombok.RequiredArgsConstructor;
 

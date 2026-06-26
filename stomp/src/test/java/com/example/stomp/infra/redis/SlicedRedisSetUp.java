@@ -17,8 +17,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 
-import com.example.stomp.app.infra.redis.config.RedisConfig;
-import com.example.stomp.app.infra.redis.config.RedisProperties;
+import com.example.stomp.application.infra.redis.config.RedisConfig;
+import com.example.stomp.application.infra.redis.config.RedisProperties;
 import com.example.stomp.infra.redis.SlicedRedisSetUp.GsonBean;
 
 import com.redis.om.spring.RedisModulesConfiguration;

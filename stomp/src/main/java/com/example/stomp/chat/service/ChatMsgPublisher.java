@@ -5,7 +5,7 @@ import java.util.Map;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 
-import com.example.stomp.chat.dto.ChatMessageSendReq.SenderInfo;
+import com.example.stomp.trial.dto.ChatMessageSendReq.SenderInfo;
 
 import lombok.RequiredArgsConstructor;
 

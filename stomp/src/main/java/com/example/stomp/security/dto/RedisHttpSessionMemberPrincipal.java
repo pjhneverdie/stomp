@@ -6,8 +6,8 @@ import java.util.function.Function;
 
 import org.springframework.security.core.GrantedAuthority;
 
-import com.example.stomp.app.constant.SessionKeys;
-import com.example.stomp.app.util.SecurityUtil;
+import com.example.stomp.application.constant.SessionKeys;
+import com.example.stomp.application.util.SecurityUtil;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

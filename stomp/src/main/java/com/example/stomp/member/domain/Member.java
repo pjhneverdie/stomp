@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
-import com.example.stomp.app.domain.BaseEntity;
+import com.example.stomp.application.domain.BaseEntity;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;

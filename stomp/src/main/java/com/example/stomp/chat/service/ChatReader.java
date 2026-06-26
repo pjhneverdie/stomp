@@ -12,8 +12,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
-import com.example.stomp.app.constant.RedisKeys;
-import com.example.stomp.chat.document.RoomPreview;
+import com.example.stomp.application.constant.RedisKeys;
+import com.example.stomp.trial.document.RoomPreview;
 
 import lombok.RequiredArgsConstructor;
 

@@ -2,7 +2,7 @@ package com.example.stomp.member.domain;
 
 import java.time.LocalDateTime;
 
-import com.example.stomp.app.domain.BaseEntity;
+import com.example.stomp.application.domain.BaseEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

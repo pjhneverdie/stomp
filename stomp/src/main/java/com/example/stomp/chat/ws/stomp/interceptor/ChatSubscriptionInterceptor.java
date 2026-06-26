@@ -7,9 +7,9 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 
-import com.example.stomp.app.util.StompHeaderUtil;
-import com.example.stomp.chat.service.ChatRoomService;
+import com.example.stomp.application.util.StompHeaderUtil;
 import com.example.stomp.member.service.MemberService;
+import com.example.stomp.trial.service.TrialService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ChatSubscriptionInterceptor implements ChannelInterceptor {
 
-    private final ChatRoomService chatRoomService;
+    private final TrialService chatRoomService;
 
     private final MemberService memberService;
 

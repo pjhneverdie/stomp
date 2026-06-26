@@ -15,9 +15,9 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
 
-import com.example.stomp.app.dto.ApiResponse;
-import com.example.stomp.app.dto.AppException;
-import com.example.stomp.app.dto.ExceptionInfo;
+import com.example.stomp.application.dto.ApiResponse;
+import com.example.stomp.application.dto.AppException;
+import com.example.stomp.application.dto.ExceptionInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;

@@ -9,7 +9,7 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import com.example.stomp.chat.dto.SimpleChatMessage;
+import com.example.stomp.trial.dto.SimpleChatMessage;
 
 import lombok.RequiredArgsConstructor;
 

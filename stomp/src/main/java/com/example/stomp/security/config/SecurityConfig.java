@@ -9,7 +9,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.CookieClearingLogoutHandler;
 
-import com.example.stomp.app.constant.SessionKeys;
+import com.example.stomp.application.constant.SessionKeys;
 import com.example.stomp.member.service.MemberService;
 import com.example.stomp.security.handler.OicdLoginSuccessHandler;
 import com.example.stomp.security.handler.RedisHttpSessionLogoutHandler;

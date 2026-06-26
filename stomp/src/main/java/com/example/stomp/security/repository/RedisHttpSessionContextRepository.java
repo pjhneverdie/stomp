@@ -19,9 +19,9 @@ import org.springframework.security.web.context.HttpRequestResponseHolder;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Component;
 
-import com.example.stomp.app.constant.SessionKeys;
-import com.example.stomp.app.util.CookieUtil;
-import com.example.stomp.app.util.SecurityUtil;
+import com.example.stomp.application.constant.SessionKeys;
+import com.example.stomp.application.util.CookieUtil;
+import com.example.stomp.application.util.SecurityUtil;
 import com.example.stomp.member.dto.OidcMemberPrincipal;
 import com.example.stomp.security.dto.RedisHttpSessionAuthenticationToken;
 import com.example.stomp.security.dto.RedisHttpSessionMemberPrincipal;
