@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
+import com.example.stomp.feature.chat.service.ChatReader;
 import com.example.stomp.infra.redis.SlicedRedisSetUp;
 
 @SlicedRedisSetUp
